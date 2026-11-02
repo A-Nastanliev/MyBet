@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="src/MyBet.Application/MyBet.Application.csproj" />
+  <Project Path="src/MyBet.Cli/MyBet.Cli.csproj" />
+  <Project Path="src/MyBet.Domain/MyBet.Domain.csproj" />
+  <Project Path="src/MyBet.Infrastructure/MyBet.Infrastructure.csproj" />
+  <Project Path="tests/MyBet.Tests/MyBet.Tests.csproj" />
+</Solution>

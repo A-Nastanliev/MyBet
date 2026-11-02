@@ -1,0 +1,14 @@
+# Let git normalize line endings for text files
+* text=auto
+
+*.cs      text diff=csharp
+*.csproj  text
+*.slnx    text
+*.json    text
+*.md      text diff=markdown
+
+# Never touch or diff images as text
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary

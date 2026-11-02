@@ -1,0 +1,66 @@
+# ---- Personal data: real bet slips ---------------------------------------
+# Screenshots and their expected JSON contain real slip numbers, stakes and
+# betting history. They stay on this machine only.
+/tests/MyBet.Tests/Samples/*
+!/tests/MyBet.Tests/Samples/README.md
+
+# Any folder you point the importer or MYBET_SAMPLES at
+/screenshots/
+/slips/
+/import/
+/data/
+
+# The future SQLite database holds every imported bet
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# ---- Local settings and secrets ------------------------------------------
+# appsettings.json is committed (no secrets in it). Machine-specific
+# overrides go in one of these instead.
+appsettings.Local.json
+appsettings.*.local.json
+appsettings.Development.json
+.env
+.env.*
+
+# ---- Build output --------------------------------------------------------
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+artifacts/
+
+# ---- Test output ---------------------------------------------------------
+TestResults/
+*.trx
+coverage*.xml
+coverage*.json
+*.coverage
+*.coveragexml
+[Cc]overage/
+
+# ---- Visual Studio / Rider / VS Code -------------------------------------
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+launchSettings.json.user
+.idea/
+*.DotSettings.user
+.vscode/*
+!.vscode/extensions.json
+
+# ---- NuGet / misc --------------------------------------------------------
+*.nupkg
+*.snupkg
+project.lock.json
+.nuget/
+
+# ---- OS junk -------------------------------------------------------------
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
