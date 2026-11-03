@@ -22,7 +22,25 @@ namespace MyBet.Domain.Validation
             if (Math.Abs(product - slip.TotalOdds) > slip.TotalOdds * OddsTolerance)
                 issues.Add($"Odds product {product:F2} != total odds {slip.TotalOdds:F2}.");
 
-            if (slip.Stake is { } stake && slip.Payout is { } payout && slip.Status == SlipStatus.Won)
+            if (slip.Status is null)
+                issues.Add("Slip status not determined.");
+
+            var unknownLegs = slip.Legs.Count(l => l.Result is null);
+            if (unknownLegs > 0)
+                issues.Add($"{unknownLegs} leg result(s) not determined.");
+
+            if (unknownLegs == 0)
+            {
+                var anyLost = slip.Legs.Any(l => l.Result == LegResult.Lost);
+
+                if (slip.Status == SlipStatus.Won && anyLost)
+                    issues.Add("Slip is Won but a leg is Lost.");
+
+                if (slip.Status == SlipStatus.Lost && !anyLost)
+                    issues.Add("Slip is Lost but no leg is Lost.");
+            }
+
+            if (slip.Status == SlipStatus.Won && slip.Stake is { } stake && slip.Payout is { } payout)
             {
                 var gross = stake * slip.TotalOdds;
                 var bonus = (slip.BonusPercent ?? 0) / 100m * (gross - stake);

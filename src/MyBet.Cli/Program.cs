@@ -5,7 +5,7 @@ using Microsoft.Extensions.Hosting;
 using MyBet.Application.Abstractions;
 using MyBet.Domain.Validation;
 using MyBet.Infrastructure;
-using MyBet.Infrastructure.Ollama;
+using System.Text.Json.Serialization;
 
 if (args.Length == 0)
 {
@@ -19,6 +19,7 @@ var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings
     ContentRootPath = AppContext.BaseDirectory
 });
 builder.Services.AddInfrastructure(builder.Configuration);
+
 using var host = builder.Build();
 
 using var cts = new CancellationTokenSource();
@@ -28,12 +29,8 @@ Console.CancelKeyPress += (_, e) =>
     cts.Cancel();
 };
 
-var ollama = host.Services.GetRequiredService<OllamaLifecycle>();
-
 try
 {
-    await ollama.StartAsync(cts.Token);
-
     var extractor = host.Services.GetRequiredService<ISlipExtractor>();
     var slip = await extractor.ExtractAsync(await File.ReadAllBytesAsync(args[0], cts.Token), cts.Token);
 
@@ -43,10 +40,22 @@ try
         return 1;
     }
 
-    var json = new JsonSerializerOptions { WriteIndented = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
-    Console.WriteLine(JsonSerializer.Serialize(slip, json));
+    foreach (var leg in slip.Legs.Where(l => l.Result is null))
+        leg.Result = LegResultEvaluator.Evaluate(leg);
+
+    slip.Status ??= LegResultEvaluator.ResolveStatus(slip.Legs);
 
     var issues = SlipValidator.Validate(slip);
+    slip.NeedsReview = issues.Count > 0;
+
+    var json = new JsonSerializerOptions
+    {
+        WriteIndented = true,
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+        Converters = { new JsonStringEnumConverter() }
+    };
+    Console.WriteLine(JsonSerializer.Serialize(slip, json));
+
     Console.WriteLine(issues.Count == 0 ? "VALID" : "NEEDS REVIEW:\n- " + string.Join("\n- ", issues));
     return 0;
 }
@@ -59,8 +68,4 @@ catch (Exception ex)
 {
     Console.WriteLine($"Error: {ex.Message}");
     return 1;
-}
-finally
-{
-    await ollama.DisposeAsync();
 }

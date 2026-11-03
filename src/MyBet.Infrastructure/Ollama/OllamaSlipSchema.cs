@@ -9,7 +9,6 @@ namespace MyBet.Infrastructure.Ollama
           "type": "object",
           "properties": {
             "slipId":       { "type": ["string", "null"] },
-            "isLive":       { "type": ["boolean", "null"] },
             "placedAt":     { "type": ["string", "null"] },
             "type":         { "type": ["string", "null"] },
             "stake":        { "type": ["number", "null"] },
@@ -44,7 +43,7 @@ namespace MyBet.Infrastructure.Ollama
               }
             }
           },
-          "required": ["slipId", "isLive", "placedAt", "type", "stake", "totalOdds", "payout", "bonusPercent", "bonusAmount", "legs"]
+          "required": ["slipId", "placedAt", "type", "stake", "totalOdds", "payout", "bonusPercent", "bonusAmount", "legs"]
         }
         """).RootElement.Clone();
     }

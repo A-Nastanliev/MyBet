@@ -49,6 +49,11 @@ namespace MyBet.Application.Import
                 for (var i = 0; i < slip.Legs.Count && i < results.Count; i++)
                     slip.Legs[i].Result = results[i];
 
+                foreach (var leg in slip.Legs.Where(l => l.Result is null))
+                    leg.Result = LegResultEvaluator.Evaluate(leg);
+
+                slip.Status ??= LegResultEvaluator.ResolveStatus(slip.Legs);
+
                 var issues = SlipValidator.Validate(slip);
                 slip.NeedsReview = issues.Count > 0;
 

@@ -1,11 +1,9 @@
 ﻿namespace MyBet.Domain.Enums
 {
-    public enum LegResult 
-    { 
-        Pending,
-        Won, 
-        Lost, 
-        Void, 
-        EarlyPayout 
+    public enum LegResult
+    {
+        Won,
+        Lost,
+        EarlyPayout
     }
 }

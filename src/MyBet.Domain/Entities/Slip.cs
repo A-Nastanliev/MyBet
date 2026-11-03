@@ -13,8 +13,7 @@ namespace MyBet.Domain.Entities
         public decimal? Payout { get; set; }
         public decimal? BonusPercent { get; set; }
         public decimal? BonusAmount { get; set; }
-        public SlipStatus Status { get; set; }
-        public bool IsLive { get; set; }
+        public SlipStatus? Status { get; set; }
         public bool NeedsReview { get; set; }
         public List<Leg> Legs { get; set; } = new();
     }

@@ -92,24 +92,6 @@ namespace MyBet.Tests.Infrastructure
         }
 
         [Fact]
-        public void Live_slip_has_no_placed_at_even_if_the_model_returned_one()
-        {
-            var slip = SlipMapper.ToDomain(new SlipDto { IsLive = true, PlacedAt = "27.10.2026 г. 19:35" });
-
-            Assert.True(slip.IsLive);
-            Assert.Null(slip.PlacedAt);
-        }
-
-        [Fact]
-        public void Non_live_slip_keeps_its_placed_at()
-        {
-            var slip = SlipMapper.ToDomain(new SlipDto { IsLive = false, PlacedAt = "18:19 ч. 18.10.2026 г." });
-
-            Assert.False(slip.IsLive);
-            Assert.Equal(new DateTime(2026, 10, 18, 18, 19, 0), slip.PlacedAt);
-        }
-
-        [Fact]
         public void Bet_builder_leg_always_has_the_bet_builder_market_and_no_selection()
         {
             var dto = new SlipDto

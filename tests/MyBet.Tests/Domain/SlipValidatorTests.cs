@@ -6,6 +6,8 @@ namespace MyBet.Tests.Domain
 {
     public class SlipValidatorTests
     {
+        private static Leg Won(decimal odds) => new() { Odds = odds, Result = LegResult.Won };
+
         [Fact]
         public void Double_with_3_percent_bonus_is_valid()
         {
@@ -16,7 +18,7 @@ namespace MyBet.Tests.Domain
                 BonusPercent = 3,
                 Payout = 2.98m,
                 Status = SlipStatus.Won,
-                Legs = { new Leg { Odds = 1.46m }, new Leg { Odds = 2.00m } }
+                Legs = { Won(1.46m), Won(2.00m) }
             };
 
             Assert.Empty(SlipValidator.Validate(slip));
@@ -63,15 +65,50 @@ namespace MyBet.Tests.Domain
                 Status = SlipStatus.Won,
                 Legs =
                 {
-                    new Leg { Odds = 1.45m },
-                    new Leg { Odds = 1.5m },
-                    new Leg { Odds = 1.28m }, 
-                    new Leg { Odds = 1.19m },
-                    new Leg { Odds = 1.29m }, 
-                    new Leg { Odds = 1.49m }, 
-                    new Leg { Odds = 1.19m }, 
-                    new Leg { Odds = 1.46m }, 
-                    new Leg { Odds = 1.28m }  
+                    Won(1.45m), 
+                    Won(1.5m), 
+                    Won(1.28m), 
+                    Won(1.19m), 
+                    Won(1.29m),
+                    Won(1.49m), 
+                    Won(1.19m), 
+                    Won(1.46m), 
+                    Won(1.28m)
+                }
+            };
+
+            Assert.Empty(SlipValidator.Validate(slip));
+        }
+
+        [Fact]
+        public void Won_slip_with_a_lost_leg_is_flagged()
+        {
+            var slip = new Slip
+            {
+                TotalOdds = 2.92m,
+                Status = SlipStatus.Won,
+                Legs =
+                {
+                    Won(1.46m),
+                    new Leg { Odds = 2.00m, Result = LegResult.Lost }
+                }
+            };
+
+            Assert.Contains(SlipValidator.Validate(slip), i => i.Contains("Won but a leg is Lost"));
+        }
+
+        [Fact]
+        public void Lost_slip_with_a_lost_leg_is_valid()
+        {
+            var slip = new Slip
+            {
+                Stake = 1.00m,
+                TotalOdds = 2.92m,
+                Status = SlipStatus.Lost,
+                Legs =
+                {
+                    Won(1.46m),
+                    new Leg { Odds = 2.00m, Result = LegResult.Lost }
                 }
             };
 

@@ -7,8 +7,7 @@
 
         Slip fields:
         - slipId: the number after № (digits only)
-        - isLive: true if the line under the slip title says На живо, false if it shows a date and time
-        - placedAt: the date and time under the slip title at the very top, exactly as shown (for example 18:19 ч. 18.10.2026 г.). null if the slip says На живо. Times and dates inside the legs are match times, never use them for placedAt.
+        - placedAt: the date and time under the slip title at the very top, exactly as shown (for example 18:19 ч. 18.10.2026 г.). If the line under the title says На живо, it is not a date: return null. Times and dates inside the legs are match times, never use them for placedAt.
         - type: the slip type in the title (for example Двойни or 9-кратни)
         - stake: the amount after Залог near the bottom
         - totalOdds: the odds number on its own line directly under the line that looks like Двойни, 1 залог × 1.00 € (for example 14.16). It is not the stake.
@@ -25,9 +24,9 @@
         Leg fields, in the order they appear on the slip:
         - selection: the bold pick on line 1 (for example a team name, Да, Над 3.5). The pick is not necessarily one of the two teams.
         - odds: the number on the right of line 1
-        - market: line 2, copied exactly as written. Do not shorten it, translate it or replace it with another market. Markets differ from leg to leg: Краен Резултат, Брой Голове 2.5, Хандикап 1:0, Азиатски Хандикап -1.5, Двойна Възможност, or a market that starts with a team name and a dash, like Барселона - Брой Голове 1.5. It is a different text from the pick.
-        - homeTeam: the team to the left of the score on line 3. For a live match with the teams on two lines, the upper team.
-        - awayTeam: the team to the right of the score on line 3. For a live match with the teams on two lines, the lower team.
+        - market: line 2, the line below the pick. It is the name of the bet type, never the pick. Copy it exactly as written, from its first character to the end of the line, and never drop the start of it. Examples of market lines: Краен Резултат, Брой Голове 2.5, Хандикап 1:0, Азиатски Хандикап -1.5, Двойна Възможност, or a market that starts with a team name and a dash, like Барселона - Брой Голове 1.5 (keep the team name and the dash). Над and Под are picks, so they are never the start of a market: for the pick Над 2.5 the market line is Брой Голове 2.5.
+        - homeTeam: the team to the left of the score on line 3. If the teams are on two lines, the upper team.
+        - awayTeam: the team to the right of the score on line 3. If the teams are on two lines, the lower team.
         - score: home score and away score as digits, for example 4 : 3
         - subSelections: an empty list for normal legs
 

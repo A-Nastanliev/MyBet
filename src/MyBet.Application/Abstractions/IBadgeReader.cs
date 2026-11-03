@@ -4,6 +4,6 @@ namespace MyBet.Application.Abstractions
 {
     public interface IBadgeReader
     {
-        IReadOnlyList<LegResult> ReadLegResults(byte[] imageBytes, int legCount);
+        IReadOnlyList<LegResult?> ReadLegResults(byte[] imageBytes, int legCount);
     }
 }

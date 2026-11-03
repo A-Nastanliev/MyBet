@@ -14,13 +14,10 @@ namespace MyBet.Infrastructure.Ollama.Mapping
 
         public static Slip ToDomain(SlipDto dto)
         {
-            var isLive = dto.IsLive ?? false;
-
             var slip = new Slip
             {
                 SlipId = dto.SlipId?.Trim() ?? "",
-                IsLive = isLive,
-                PlacedAt = isLive ? null : ParseDate(dto.PlacedAt),
+                PlacedAt = ParseDate(dto.PlacedAt),
                 Stake = dto.Stake,
                 TotalOdds = dto.TotalOdds ?? 0m,
                 Payout = dto.Payout,

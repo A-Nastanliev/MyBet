@@ -6,7 +6,6 @@ namespace MyBet.Tests.Support
     public class ExpectedSlip
     {
         public string SlipId { get; set; } = "";
-        public bool IsLive { get; set; }
         public DateTime? PlacedAt { get; set; }
         public string? Type { get; set; }
         public decimal? Stake { get; set; }
@@ -21,7 +20,6 @@ namespace MyBet.Tests.Support
         public Slip ToSlip() => new()
         {
             SlipId = SlipId,
-            IsLive = IsLive,
             PlacedAt = PlacedAt,
             Type = Type,
             Stake = Stake,
@@ -30,7 +28,7 @@ namespace MyBet.Tests.Support
             BonusPercent = BonusPercent,
             BonusAmount = BonusAmount,
             Status = Status,
-            Legs = Legs.Select(leg => new Leg { Odds = leg.Odds }).ToList()
+            Legs = Legs.Select(leg => new Leg { Odds = leg.Odds, Result = leg.Result }).ToList()
         };
     }
 }

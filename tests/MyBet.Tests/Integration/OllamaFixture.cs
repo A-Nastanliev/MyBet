@@ -1,51 +1,36 @@
-﻿using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using MyBet.Application.Abstractions;
 using MyBet.Infrastructure.Ollama;
+using MyBet.Infrastructure;
 
 namespace MyBet.Tests.Integration
 {
     public sealed class OllamaFixture : IAsyncLifetime
     {
-        private readonly HttpClient _http;
-        private readonly OllamaLifecycle _lifecycle;
-        private readonly OllamaSlipExtractor _extractor;
-        private readonly Lazy<Task> _start;
+        private readonly ServiceProvider _provider;
 
         public string Model { get; }
+        public ISlipExtractor Extractor { get; }
 
         public OllamaFixture()
         {
-            var settings = new OllamaOptions();
-
             var model = Environment.GetEnvironmentVariable("MYBET_OLLAMA_MODEL");
-            if (!string.IsNullOrWhiteSpace(model)) settings.Model = model;
 
-            Model = settings.Model;
-
-            _http = new HttpClient
+            var services = new ServiceCollection();
+            services.AddLogging();
+            services.AddInfrastructure(o =>
             {
-                BaseAddress = new Uri(settings.BaseUrl),
-                Timeout = TimeSpan.FromMinutes(settings.TimeoutMinutes)
-            };
+                if (!string.IsNullOrWhiteSpace(model)) o.Model = model;
+            });
 
-            var options = Options.Create(settings);
-            _lifecycle = new OllamaLifecycle(_http, options);
-            _extractor = new OllamaSlipExtractor(_http, options);
-            _start = new Lazy<Task>(() => _lifecycle.StartAsync());
-        }
-
-        public async Task<ISlipExtractor> GetExtractorAsync()
-        {
-            await _start.Value;
-            return _extractor;
+            _provider = services.BuildServiceProvider();
+            Model = _provider.GetRequiredService<IOptions<OllamaOptions>>().Value.Model;
+            Extractor = _provider.GetRequiredService<ISlipExtractor>();
         }
 
         public Task InitializeAsync() => Task.CompletedTask;
 
-        public async Task DisposeAsync()
-        {
-            await _lifecycle.DisposeAsync();
-            _http.Dispose();
-        }
+        public async Task DisposeAsync() => await _provider.DisposeAsync();
     }
 }

@@ -10,7 +10,7 @@ namespace MyBet.Domain.Entities
         public string Market { get; set; } = "";
         public string Selection { get; set; } = "";
         public decimal Odds { get; set; }
-        public LegResult Result { get; set; }
+        public LegResult? Result { get; set; }
         public string? Score { get; set; }
         public bool IsBetBuilder { get; set; }
         public List<SubSelection> SubSelections { get; set; } = new();

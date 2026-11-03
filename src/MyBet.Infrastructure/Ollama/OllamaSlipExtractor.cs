@@ -18,19 +18,24 @@ namespace MyBet.Infrastructure.Ollama
 
         private readonly HttpClient _http;
         private readonly OllamaOptions _options;
+        private readonly OllamaLifecycle _lifecycle;
 
-        public OllamaSlipExtractor(HttpClient http, IOptions<OllamaOptions> options)
+        public OllamaSlipExtractor(HttpClient http, IOptions<OllamaOptions> options, OllamaLifecycle lifecycle)
         {
             _http = http;
             _options = options.Value;
+            _lifecycle = lifecycle;
         }
 
         public async Task<Slip?> ExtractAsync(byte[] imageBytes, CancellationToken ct = default)
         {
+            await _lifecycle.EnsureStartedAsync(ct);
+
             var request = new
             {
                 model = _options.Model,
                 stream = false,
+                keep_alive = _options.KeepAlive,
                 format = OllamaSlipSchema.Value,
                 options = new { num_ctx = _options.NumCtx, temperature = 0 },
                 messages = new[]

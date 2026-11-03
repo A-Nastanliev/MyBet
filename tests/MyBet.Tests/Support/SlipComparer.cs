@@ -11,7 +11,6 @@ namespace MyBet.Tests.Support
             var diffs = new List<string>();
 
             ExactText(diffs, "slipId", expected.SlipId, actual.SlipId);
-            Exact(diffs, "isLive", expected.IsLive, actual.IsLive);
             Exact(diffs, "placedAt", expected.PlacedAt, actual.PlacedAt);
             ExactText(diffs, "type", expected.Type, actual.Type);
             Exact(diffs, "stake", expected.Stake, actual.Stake);

@@ -156,14 +156,5 @@ namespace MyBet.Tests.Support
 
             Assert.Equal(3, SlipComparer.Compare(Expected(), actual).Count);
         }
-
-        [Fact]
-        public void Wrong_live_flag_is_reported()
-        {
-            var actual = Actual();
-            actual.IsLive = true;
-
-            Assert.Contains(SlipComparer.Compare(Expected(), actual), d => d.StartsWith("isLive"));
-        }
     }
 }

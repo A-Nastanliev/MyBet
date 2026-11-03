@@ -77,7 +77,7 @@ namespace MyBet.Tests.Application
         [Fact]
         public async Task Badge_results_are_applied_to_legs_in_order()
         {
-            _badgeReader.Results = new[] { LegResult.Won, LegResult.Lost };
+            _badgeReader.Results = new LegResult?[] { LegResult.Won, LegResult.Lost };
             _dir.AddFile("a.png");
             _extractor.Enqueue(TestSlips.ValidDouble("1003"));
 
@@ -115,6 +115,50 @@ namespace MyBet.Tests.Application
 
             Assert.Single(results);
             Assert.Equal(1, _extractor.CallCount);
+        }
+
+        [Fact]
+        public async Task Leg_without_a_badge_is_decided_from_the_score_and_the_slip_is_lost()
+        {
+            _badgeReader.Results = new LegResult?[] { LegResult.Won, null };
+            _dir.AddFile("a.png");
+            _extractor.Enqueue(TestSlips.DoubleWithAstonVillaOver("1006"));
+
+            var results = await _service.ImportDirectoryAsync(_dir.FullPath);
+
+            var saved = Assert.Single(_repository.Slips);
+            Assert.Equal(LegResult.Lost, saved.Legs[1].Result);
+            Assert.Equal(SlipStatus.Lost, saved.Status);
+            Assert.Equal(ImportOutcome.Imported, Assert.Single(results).Outcome);
+        }
+
+        [Fact]
+        public async Task Badge_result_wins_over_the_score_evaluation()
+        {
+            _badgeReader.Results = new LegResult?[] { LegResult.Won, LegResult.Won };
+            _dir.AddFile("a.png");
+            _extractor.Enqueue(TestSlips.DoubleWithAstonVillaOver("1007"));
+
+            await _service.ImportDirectoryAsync(_dir.FullPath);
+
+            Assert.Equal(LegResult.Won, Assert.Single(_repository.Slips).Legs[1].Result);
+        }
+
+        [Fact]
+        public async Task Leg_that_cannot_be_decided_sends_the_slip_to_review()
+        {
+            _badgeReader.Results = new LegResult?[] { LegResult.Won, null };
+            var slip = TestSlips.DoubleWithAstonVillaOver("1008");
+            slip.Legs[1].Market = "Двойна Възможност";
+            _dir.AddFile("a.png");
+            _extractor.Enqueue(slip);
+
+            var results = await _service.ImportDirectoryAsync(_dir.FullPath);
+
+            var saved = Assert.Single(_repository.Slips);
+            Assert.Null(saved.Legs[1].Result);
+            Assert.Null(saved.Status);
+            Assert.Equal(ImportOutcome.NeedsReview, Assert.Single(results).Outcome);
         }
     }
 }

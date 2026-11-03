@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -8,44 +9,61 @@ using System.Text.Json;
 
 namespace MyBet.Infrastructure.Ollama
 {
-    public sealed class OllamaLifecycle : IAsyncDisposable, IDisposable
+    public sealed class OllamaLifecycle : IAsyncDisposable
     {
         private readonly HttpClient _http;
         private readonly OllamaOptions _options;
+        private readonly ILogger<OllamaLifecycle> _logger;
+        private readonly SemaphoreSlim _gate = new(1, 1);
 
         private Process? _process;
+        private bool _started;
         private bool _modelLoaded;
         private bool _disposed;
 
-        public OllamaLifecycle(HttpClient http, IOptions<OllamaOptions> options)
+        public OllamaLifecycle(HttpClient http, IOptions<OllamaOptions> options, ILogger<OllamaLifecycle> logger)
         {
             _http = http;
             _options = options.Value;
+            _logger = logger;
         }
 
-        public async Task StartAsync(CancellationToken ct = default)
+        public async Task EnsureStartedAsync(CancellationToken ct = default)
         {
-            if (!_options.ManageLifecycle) return;
+            if (_started || !_options.ManageLifecycle) return;
 
+            await _gate.WaitAsync(ct);
+            try
+            {
+                if (_started) return;
+                await StartAsync(ct);
+                _started = true;
+            }
+            finally
+            {
+                _gate.Release();
+            }
+        }
+
+        private async Task StartAsync(CancellationToken ct)
+        {
             if (await IsServerUpAsync(ct))
             {
-                Console.WriteLine("Ollama is already running (will be left running).");
+                _logger.LogInformation("Ollama is already running (will be left running).");
             }
             else
             {
-                Console.WriteLine("Starting Ollama...");
+                _logger.LogInformation("Starting Ollama...");
                 StartServerProcess();
                 await WaitForServerAsync(ct);
             }
 
             await EnsureModelInstalledAsync(ct);
 
-            Console.WriteLine($"Loading model {_options.Model}...");
+            _logger.LogInformation("Loading model {Model}...", _options.Model);
             await LoadModelAsync(ct);
-            Console.WriteLine("Ollama ready.");
+            _logger.LogInformation("Ollama ready.");
         }
-
-        public void Dispose() => DisposeAsync().AsTask().GetAwaiter().GetResult();
 
         public async ValueTask DisposeAsync()
         {
@@ -58,13 +76,14 @@ namespace MyBet.Infrastructure.Ollama
             {
                 if (_process is { HasExited: false })
                 {
-                    Console.WriteLine("Stopping Ollama...");
+                    _logger.LogInformation("Stopping Ollama...");
                     _process.Kill(entireProcessTree: true);
-                    await _process.WaitForExitAsync(new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token);
+                    using var exitCts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+                    await _process.WaitForExitAsync(exitCts.Token);
                 }
                 else if (_modelLoaded)
                 {
-                    Console.WriteLine("Unloading model...");
+                    _logger.LogInformation("Unloading model...");
                     using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
                     await _http.PostAsJsonAsync("/api/generate",
                         new { model = _options.Model, keep_alive = 0 }, cts.Token);
@@ -72,12 +91,13 @@ namespace MyBet.Infrastructure.Ollama
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Ollama cleanup failed: {ex.Message}");
+                _logger.LogWarning(ex, "Ollama cleanup failed.");
             }
             finally
             {
                 _process?.Dispose();
                 _process = null;
+                _gate.Dispose();
             }
         }
 

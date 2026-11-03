@@ -3,7 +3,6 @@
     public class SlipDto
     {
         public string? SlipId { get; set; }
-        public bool? IsLive { get; set; }
         public string? PlacedAt { get; set; }
         public string? Type { get; set; }
         public decimal? Stake { get; set; }

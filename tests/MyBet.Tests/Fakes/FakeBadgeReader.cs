@@ -5,9 +5,10 @@ namespace MyBet.Tests.Fakes
 {
     public class FakeBadgeReader : IBadgeReader
     {
-        public IReadOnlyList<LegResult>? Results { get; set; }
+        public IReadOnlyList<LegResult?>? Results { get; set; }
 
-        public IReadOnlyList<LegResult> ReadLegResults(byte[] imageBytes, int legCount) =>
-            Results ?? Enumerable.Repeat(LegResult.Won, legCount).ToList();
+        public IReadOnlyList<LegResult?> ReadLegResults(byte[] imageBytes, int legCount) =>
+            Results ?? Enumerable.Repeat<LegResult?>(LegResult.Won, legCount).ToList();
     }
 }
+    

@@ -7,7 +7,8 @@ using Xunit.Abstractions;
 namespace MyBet.Tests.Integration
 {
     [Trait("Category", "Ollama")]
-    public class OllamaExtractionTests : IClassFixture<OllamaFixture>
+    [Collection(OllamaCollection.Name)]
+    public class OllamaExtractionTests
     {
         private static readonly JsonSerializerOptions OutputJson = new()
         {
@@ -32,7 +33,7 @@ namespace MyBet.Tests.Integration
         {
             var expected = SampleLoader.LoadExpected(sample);
             var image = await File.ReadAllBytesAsync(SampleLoader.FindImage(sample));
-            var extractor = await _ollama.GetExtractorAsync();
+            var extractor = _ollama.Extractor;
 
             var slip = await extractor.ExtractAsync(image);
 
@@ -41,6 +42,17 @@ namespace MyBet.Tests.Integration
             _output.WriteLine(JsonSerializer.Serialize(slip, OutputJson));
 
             var diffs = SlipComparer.Compare(expected, slip).ToList();
+
+            for (var i = 0; i < slip.Legs.Count && i < expected.Legs.Count; i++)
+            {
+                var decided = LegResultEvaluator.Evaluate(slip.Legs[i]);
+                var want = expected.Legs[i].Result;
+
+                if (decided is not null && want is not null && decided != want)
+                    diffs.Add($"leg {i + 1} result: evaluator says {decided}, expected {want}");
+
+                slip.Legs[i].Result = want;
+            }
 
             slip.Status = expected.Status;
             diffs.AddRange(SlipValidator.Validate(slip).Select(issue => "validator: " + issue));
