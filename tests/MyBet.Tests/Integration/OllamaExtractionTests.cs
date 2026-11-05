@@ -1,7 +1,9 @@
 ﻿using System.Text.Encodings.Web;
 using System.Text.Json;
+using MyBet.Domain.Enums;
 using MyBet.Domain.Validation;
 using MyBet.Tests.Support;
+using System.Text.Json.Serialization;
 using Xunit.Abstractions;
 
 namespace MyBet.Tests.Integration
@@ -13,7 +15,8 @@ namespace MyBet.Tests.Integration
         private static readonly JsonSerializerOptions OutputJson = new()
         {
             WriteIndented = true,
-            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            Converters = { new JsonStringEnumConverter() }
         };
 
         private readonly OllamaFixture _ollama;
@@ -45,16 +48,21 @@ namespace MyBet.Tests.Integration
 
             for (var i = 0; i < slip.Legs.Count && i < expected.Legs.Count; i++)
             {
-                var decided = LegResultEvaluator.Evaluate(slip.Legs[i]);
+                var got = slip.Legs[i].Result;
                 var want = expected.Legs[i].Result;
+                if (got != want) diffs.Add($"leg {i + 1} result: expected {want}, got {got}");
 
-                if (decided is not null && want is not null && decided != want)
-                    diffs.Add($"leg {i + 1} result: evaluator says {decided}, expected {want}");
-
-                slip.Legs[i].Result = want;
+                if (want is LegResult.Won or LegResult.Lost)
+                {
+                    var decided = LegResultEvaluator.Evaluate(slip.Legs[i]);
+                    if (decided is not null && decided != want)
+                        diffs.Add($"leg {i + 1}: score says {decided}, badge says {want}");
+                }
             }
 
-            slip.Status = expected.Status;
+            if (slip.Status != expected.Status)
+                diffs.Add($"status: expected {expected.Status}, got {slip.Status}");
+
             diffs.AddRange(SlipValidator.Validate(slip).Select(issue => "validator: " + issue));
 
             Assert.True(diffs.Count == 0,

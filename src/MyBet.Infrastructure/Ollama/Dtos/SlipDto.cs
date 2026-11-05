@@ -7,6 +7,7 @@
         public string? Type { get; set; }
         public decimal? Stake { get; set; }
         public decimal? TotalOdds { get; set; }
+        public string? PayoutLabel { get; set; }
         public decimal? Payout { get; set; }
         public decimal? BonusPercent { get; set; }
         public decimal? BonusAmount { get; set; }

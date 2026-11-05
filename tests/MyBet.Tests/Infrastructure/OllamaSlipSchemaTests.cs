@@ -14,7 +14,7 @@ namespace MyBet.Tests.Infrastructure
             var names = leg.EnumerateObject().Select(p => p.Name).ToArray();
 
             Assert.Equal(
-                new[] { "selection", "odds", "market", "homeTeam", "awayTeam", "score", "subSelections" },
+                new[] { "selection", "odds", "market", "badges", "homeTeam", "awayTeam", "score", "subSelections" },
                 names);
         }
     }

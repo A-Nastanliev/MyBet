@@ -8,10 +8,11 @@
         Slip fields:
         - slipId: the number after № (digits only)
         - placedAt: the date and time under the slip title at the very top, exactly as shown (for example 18:19 ч. 18.10.2026 г.). If the line under the title says На живо, it is not a date: return null. Times and dates inside the legs are match times, never use them for placedAt.
-        - type: the slip type in the title (for example Двойни or 9-кратни)
+        - type: only the slip type word from the title, without the stake amount and without €. For the title Тройни 2.00 € return Тройни. For the title 9-кратни 2.31 € return 9-кратни.
         - stake: the amount after Залог near the bottom
         - totalOdds: the odds number on its own line directly under the line that looks like Двойни, 1 залог × 1.00 € (for example 14.16). It is not the stake.
-        - payout: the amount after Печалба: near the bottom
+        - payoutLabel: the word before the amount in the bottom block under Залог: Печалба or Кешаут. Copy it without the colon.
+        - payout: the amount on that same line (after Печалба or after Кешаут).
         - bonusPercent: the percentage in the +N% бонус line, as a number (10 for +10%). null if there is no bonus line.
         - bonusAmount: the amount after вкл. бонус at the bottom right. null if there is none.
 
@@ -25,14 +26,17 @@
         - selection: the bold pick on line 1 (for example a team name, Да, Над 3.5). The pick is not necessarily one of the two teams.
         - odds: the number on the right of line 1
         - market: line 2, the line below the pick. It is the name of the bet type, never the pick. Copy it exactly as written, from its first character to the end of the line, and never drop the start of it. Examples of market lines: Краен Резултат, Брой Голове 2.5, Хандикап 1:0, Азиатски Хандикап -1.5, Двойна Възможност, or a market that starts with a team name and a dash, like Барселона - Брой Голове 1.5 (keep the team name and the dash). Над and Под are picks, so they are never the start of a market: for the pick Над 2.5 the market line is Брой Голове 2.5.
+        - The market is never the same text as the selection. If your market equals your selection, you read line 1 twice: read line 2 instead. A market never starts with Над, Под, Да or a number.
+        - The market line is not the match line. It may start with a team name (for example Барселона - Брой Голове 1.5), but that team does not decide homeTeam or awayTeam. homeTeam is always the team left of the score or vs. on line 3.
+        - badges: the words shown in the small pills on the leg, copied exactly. Pills can appear right of the odds or right after the market name. A leg can have two pills. The possible words are Печалба, Загуба, Изплатени. If a pill shows other text or an icon only, return Друго.
         - homeTeam: the team to the left of the score on line 3. If the teams are on two lines, the upper team.
         - awayTeam: the team to the right of the score on line 3. If the teams are on two lines, the lower team.
-        - score: home score and away score as digits, for example 4 : 3
+        - score: the two numbers between the team names on line 3, written as home : away (for example 4 : 3). Finished and early-paid legs always show numbers. Return vs. only if the line literally shows vs. instead of numbers.
         - subSelections: an empty list for normal legs
 
         Bet Builder legs: line 1 reads Създай Залог with the odds. Set market to Създай Залог and selection to null. The match is on line 2. Below it are the nested picks. Each nested pick is two lines: the pick on top (for example Да) and its market name underneath (for example Двата Отбора Да Отбележат). Return exactly one subSelections entry per pair, with selection and market. Never split one pair into two entries.
 
-        Badges (Печалба, Загуба, Изплатени) are never a pick or a market. Ignore them. Use null for anything not visible.
+        Badges are never a pick or a market: copy them only into badges. Use null for anything not visible
         """;
     }
 }

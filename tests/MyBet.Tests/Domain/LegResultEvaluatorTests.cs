@@ -163,9 +163,23 @@ namespace MyBet.Tests.Domain
         }
 
         [Fact]
-        public void Early_payout_leg_leaves_the_status_unknown()
+        public void Early_payout_leg_counts_as_won()
         {
-            Assert.Null(LegResultEvaluator.ResolveStatus(Legs(LegResult.Won, LegResult.EarlyPayout)));
+            Assert.Equal(SlipStatus.Won,
+                LegResultEvaluator.ResolveStatus(Legs(LegResult.Won, LegResult.EarlyPayout)));
+        }
+
+        [Fact]
+        public void Pending_leg_without_a_lost_leg_leaves_the_status_unknown()
+        {
+            Assert.Null(LegResultEvaluator.ResolveStatus(Legs(LegResult.Won, LegResult.Pending)));
+        }
+
+        [Fact]
+        public void Lost_leg_wins_over_pending_legs()
+        {
+            Assert.Equal(SlipStatus.Lost,
+                LegResultEvaluator.ResolveStatus(Legs(LegResult.Pending, LegResult.Lost)));
         }
 
         [Fact]

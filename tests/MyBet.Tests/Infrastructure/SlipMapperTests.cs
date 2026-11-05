@@ -1,4 +1,5 @@
-﻿using MyBet.Infrastructure.Ollama.Dtos;
+﻿using MyBet.Domain.Enums;
+using MyBet.Infrastructure.Ollama.Dtos;
 using MyBet.Infrastructure.Ollama.Mapping;
 
 namespace MyBet.Tests.Infrastructure
@@ -124,6 +125,52 @@ namespace MyBet.Tests.Infrastructure
             Assert.True(leg.IsBetBuilder);
             Assert.Equal("Създай Залог", leg.Market);
             Assert.Equal("", leg.Selection);
+        }
+
+        [Theory]
+        [InlineData("", LegResult.Pending)]
+        [InlineData("Печалба", LegResult.Won)]
+        [InlineData("Печалба,Изплатени", LegResult.EarlyPayout)]
+        [InlineData("Загуба", LegResult.Lost)]
+        public void Badges_decide_the_leg_result(string badges, LegResult expected)
+        {
+            var leg = new LegDto { Badges = badges.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList() };
+            var slip = SlipMapper.ToDomain(new SlipDto { Legs = new() { leg } });
+
+            Assert.Equal(expected, slip.Legs[0].Result);
+        }
+
+        [Fact]
+        public void Kesaut_label_makes_the_slip_cashed_out()
+        {
+            var slip = SlipMapper.ToDomain(new SlipDto { PayoutLabel = "Кешаут", Legs = new() { new LegDto() } });
+
+            Assert.Equal(SlipStatus.CashedOut, slip.Status);
+        }
+
+        [Fact]
+        public void Lost_badge_makes_the_slip_lost()
+        {
+            var dto = new SlipDto
+            {
+                PayoutLabel = "Печалба",
+                Legs = new()
+                {
+                    new LegDto { Badges = new() { "Печалба" } },
+                    new LegDto { Badges = new() { "Загуба" } },
+                    new LegDto()
+                }
+            };
+
+            Assert.Equal(SlipStatus.Lost, SlipMapper.ToDomain(dto).Status);
+        }
+
+        [Fact]
+        public void Vs_placeholder_is_not_a_score()
+        {
+            var slip = SlipMapper.ToDomain(new SlipDto { Legs = new() { new LegDto { Score = "vs." } } });
+
+            Assert.Null(slip.Legs[0].Score);
         }
     }
 }

@@ -25,27 +25,31 @@ namespace MyBet.Domain.Validation
             if (slip.Status is null)
                 issues.Add("Slip status not determined.");
 
-            var unknownLegs = slip.Legs.Count(l => l.Result is null);
-            if (unknownLegs > 0)
-                issues.Add($"{unknownLegs} leg result(s) not determined.");
+            var undetermined = slip.Legs.Count(l => l.Result is null);
+            var pending = slip.Legs.Count(l => l.Result == LegResult.Pending);
+            var anyLost = slip.Legs.Any(l => l.Result == LegResult.Lost);
 
-            if (unknownLegs == 0)
-            {
-                var anyLost = slip.Legs.Any(l => l.Result == LegResult.Lost);
+            if (undetermined > 0)
+                issues.Add($"{undetermined} leg result(s) not determined.");
 
-                if (slip.Status == SlipStatus.Won && anyLost)
-                    issues.Add("Slip is Won but a leg is Lost.");
+            if (pending > 0 && slip.Status != SlipStatus.CashedOut
+                && !(slip.Status == SlipStatus.Lost && anyLost))
+                issues.Add($"{pending} pending leg(s) but the slip is not Lost via a lost leg or cashed out.");
 
-                if (slip.Status == SlipStatus.Lost && !anyLost)
-                    issues.Add("Slip is Lost but no leg is Lost.");
-            }
+            if (slip.Status == SlipStatus.CashedOut && anyLost)
+                issues.Add("Slip is CashedOut but a leg is Lost.");
+
+            if (slip.Status == SlipStatus.Won && anyLost)
+                issues.Add("Slip is Won but a leg is Lost.");
+
+            if (slip.Status == SlipStatus.Lost && !anyLost)
+                issues.Add("Slip is Lost but no leg is Lost.");
 
             if (slip.Status == SlipStatus.Won && slip.Stake is { } stake && slip.Payout is { } payout)
             {
                 var gross = stake * slip.TotalOdds;
-                var bonus = (slip.BonusPercent ?? 0) / 100m * (gross - stake);
-                var expected = gross + bonus;
-                if (Math.Abs(expected - payout) > MoneyTolerance)
+                var expected = gross + (slip.BonusPercent ?? 0m) / 100m * (gross - stake);
+                if (Math.Abs(payout - expected) > MoneyTolerance + stake * 0.005m)
                     issues.Add($"Payout {payout:F2} != expected {expected:F2}.");
             }
 

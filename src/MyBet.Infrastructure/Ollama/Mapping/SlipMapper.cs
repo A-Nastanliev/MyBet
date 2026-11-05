@@ -1,4 +1,6 @@
 ﻿using MyBet.Domain.Entities;
+using MyBet.Domain.Enums;
+using MyBet.Domain.Validation;
 using MyBet.Infrastructure.Ollama.Dtos;
 using System;
 using System.Collections.Generic;
@@ -11,6 +13,9 @@ namespace MyBet.Infrastructure.Ollama.Mapping
     public static class SlipMapper
     {
         private const string BetBuilderMarker = "Създай Залог";
+        private static readonly Regex DateRegex = new(@"\b\d{1,2}\.\d{1,2}\.\d{4}\b");
+        private static readonly Regex TimeRegex = new(@"\b\d{1,2}:\d{2}\b");
+        private static readonly Regex ScoreRegex = new(@"^\s*(\d+)\s*[:\-–]\s*(\d+)\s*$");
 
         public static Slip ToDomain(SlipDto dto)
         {
@@ -27,6 +32,9 @@ namespace MyBet.Infrastructure.Ollama.Mapping
             };
 
             slip.Type = string.IsNullOrWhiteSpace(dto.Type) ? DeriveType(slip.Legs.Count) : dto.Type.Trim();
+
+            var cashedOut = dto.PayoutLabel?.Contains("Кешаут", StringComparison.OrdinalIgnoreCase) == true;
+            slip.Status = cashedOut ? SlipStatus.CashedOut : LegResultEvaluator.ResolveStatus(slip.Legs);
             return slip;
         }
 
@@ -50,7 +58,8 @@ namespace MyBet.Infrastructure.Ollama.Mapping
                 Market = isBetBuilder ? BetBuilderMarker : market,
                 Selection = isBetBuilder ? "" : selection,
                 Odds = dto.Odds ?? 0m,
-                Score = dto.Score?.Trim(),
+                Result = DeriveResult(dto.Badges),
+                Score = CleanScore(dto.Score),
                 SubSelections = subs,
                 IsBetBuilder = isBetBuilder
             };
@@ -61,12 +70,9 @@ namespace MyBet.Infrastructure.Ollama.Mapping
             < 1 => null,
             1 => "Сингъл",
             2 => "Двойни",
-            3=> "Тройни",
+            3 => "Тройни",
             _ => $"{legCount}-кратни"
         };
-
-        private static readonly Regex DateRegex = new(@"\b\d{1,2}\.\d{1,2}\.\d{4}\b");
-        private static readonly Regex TimeRegex = new(@"\b\d{1,2}:\d{2}\b");
 
         private static DateTime? ParseDate(string? text)
         {
@@ -82,6 +88,24 @@ namespace MyBet.Infrastructure.Ollama.Mapping
                 date = date.Add(time);
 
             return date;
+        }
+
+        private static LegResult DeriveResult(IEnumerable<string>? badges)
+        {
+            var text = string.Join(" ", badges ?? Array.Empty<string>());
+            if (Has(text, "Изплатени")) return LegResult.EarlyPayout;
+            if (Has(text, "Загуба")) return LegResult.Lost;
+            if (Has(text, "Печалба")) return LegResult.Won;
+            return LegResult.Pending;
+        }
+
+        private static bool Has(string text, string word) =>
+            text.Contains(word, StringComparison.OrdinalIgnoreCase);
+
+        private static string? CleanScore(string? text)
+        {
+            var m = ScoreRegex.Match(text ?? "");
+            return m.Success ? $"{m.Groups[1].Value} : {m.Groups[2].Value}" : null;
         }
     }
 }

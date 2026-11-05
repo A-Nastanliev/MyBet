@@ -4,6 +4,7 @@
     {
         Won,
         Lost,
-        EarlyPayout
+        EarlyPayout,
+        Pending
     }
 }

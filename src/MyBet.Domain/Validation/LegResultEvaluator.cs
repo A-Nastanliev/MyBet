@@ -14,7 +14,7 @@ namespace MyBet.Domain.Validation
 
         public static LegResult? Evaluate(Leg leg)
         {
-            if (leg.IsBetBuilder) return null;
+            if (leg.IsBetBuilder || leg.Result == LegResult.EarlyPayout) return null;
 
             var m = ScoreRegex.Match(leg.Score ?? "");
             if (!m.Success) return null;
@@ -36,7 +36,7 @@ namespace MyBet.Domain.Validation
             if (!m.Success) return null;
 
             var line = decimal.Parse(m.Groups[2].Value, System.Globalization.CultureInfo.InvariantCulture);
-            if (line % 1 != 0.5m) return null; 
+            if (line % 1 != 0.5m) return null;
 
             var isOver = m.Groups[1].Value.Equals("Над", StringComparison.OrdinalIgnoreCase);
 
@@ -47,7 +47,7 @@ namespace MyBet.Domain.Validation
             {
                 if (Same(prefix, leg.HomeTeam)) goals = home;
                 else if (Same(prefix, leg.AwayTeam)) goals = away;
-                else return null; 
+                else return null;
             }
 
             return (isOver ? goals > line : goals < line) ? LegResult.Won : LegResult.Lost;
@@ -57,7 +57,7 @@ namespace MyBet.Domain.Validation
         {
             if (Same(leg.Selection, leg.HomeTeam)) return home > away ? LegResult.Won : LegResult.Lost;
             if (Same(leg.Selection, leg.AwayTeam)) return away > home ? LegResult.Won : LegResult.Lost;
-            return null; 
+            return null;
         }
 
         private static bool Same(string a, string b) =>
@@ -65,8 +65,9 @@ namespace MyBet.Domain.Validation
 
         public static SlipStatus? ResolveStatus(IReadOnlyCollection<Leg> legs)
         {
+            if (legs.Count == 0) return null;
             if (legs.Any(l => l.Result == LegResult.Lost)) return SlipStatus.Lost;
-            if (legs.Count > 0 && legs.All(l => l.Result == LegResult.Won)) return SlipStatus.Won;
+            if (legs.All(l => l.Result is LegResult.Won or LegResult.EarlyPayout)) return SlipStatus.Won;
             return null;
         }
     }

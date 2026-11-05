@@ -13,6 +13,7 @@ namespace MyBet.Infrastructure.Ollama
             "type":         { "type": ["string", "null"] },
             "stake":        { "type": ["number", "null"] },
             "totalOdds":    { "type": ["number", "null"] },
+            "payoutLabel":  { "type": ["string", "null"] },
             "payout":       { "type": ["number", "null"] },
             "bonusPercent": { "type": ["number", "null"] },
             "bonusAmount":  { "type": ["number", "null"] },
@@ -24,6 +25,10 @@ namespace MyBet.Infrastructure.Ollama
                   "selection": { "type": ["string", "null"] },
                   "odds":      { "type": ["number", "null"] },
                   "market":    { "type": ["string", "null"] },
+                  "badges": {
+                    "type": "array",
+                    "items": { "type": "string", "enum": ["Печалба", "Загуба", "Изплатени", "Друго"] }
+                  },
                   "homeTeam":  { "type": ["string", "null"] },
                   "awayTeam":  { "type": ["string", "null"] },
                   "score":     { "type": ["string", "null"] },
@@ -39,11 +44,11 @@ namespace MyBet.Infrastructure.Ollama
                     }
                   }
                 },
-                "required": ["selection", "odds", "market", "homeTeam", "awayTeam", "score", "subSelections"]
+                "required": ["selection", "odds", "market", "badges", "homeTeam", "awayTeam", "score", "subSelections"]
               }
             }
           },
-          "required": ["slipId", "placedAt", "type", "stake", "totalOdds", "payout", "bonusPercent", "bonusAmount", "legs"]
+          "required": ["slipId", "placedAt", "type", "stake", "totalOdds", "payoutLabel", "payout", "bonusPercent", "bonusAmount", "legs"]
         }
         """).RootElement.Clone();
     }

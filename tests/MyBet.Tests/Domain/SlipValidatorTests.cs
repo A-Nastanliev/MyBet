@@ -34,7 +34,7 @@ namespace MyBet.Tests.Domain
                 BonusPercent = 3,
                 Payout = 5.00m,
                 Status = SlipStatus.Won,
-                Legs = { new Leg { Odds = 1.46m }, new Leg { Odds = 2.00m } }
+                Legs = { Won(1.46m), Won(2.00m) }
             };
 
             Assert.NotEmpty(SlipValidator.Validate(slip));
@@ -46,7 +46,7 @@ namespace MyBet.Tests.Domain
             var slip = new Slip
             {
                 TotalOdds = 14.16m,
-                Legs = { new Leg { Odds = 2.00m }, new Leg { Odds = 2.00m } } 
+                Legs = { new Leg { Odds = 2.00m }, new Leg { Odds = 2.00m } }
             };
 
             Assert.NotEmpty(SlipValidator.Validate(slip));
@@ -65,14 +65,14 @@ namespace MyBet.Tests.Domain
                 Status = SlipStatus.Won,
                 Legs =
                 {
-                    Won(1.45m), 
-                    Won(1.5m), 
-                    Won(1.28m), 
-                    Won(1.19m), 
+                    Won(1.45m),
+                    Won(1.5m),
+                    Won(1.28m),
+                    Won(1.19m),
                     Won(1.29m),
-                    Won(1.49m), 
-                    Won(1.19m), 
-                    Won(1.46m), 
+                    Won(1.49m),
+                    Won(1.19m),
+                    Won(1.46m),
                     Won(1.28m)
                 }
             };
@@ -109,6 +109,28 @@ namespace MyBet.Tests.Domain
                 {
                     Won(1.46m),
                     new Leg { Odds = 2.00m, Result = LegResult.Lost }
+                }
+            };
+
+            Assert.Empty(SlipValidator.Validate(slip));
+        }
+
+        [Fact]
+        public void Cashed_out_slip_with_pending_legs_ignores_payout_math()
+        {
+            var slip = new Slip
+            {
+                Stake = 3.00m,
+                TotalOdds = 6.05m,
+                Payout = 6.58m,
+                Status = SlipStatus.CashedOut,
+                Legs =
+                {
+                    new Leg { Odds = 1.74m, Result = LegResult.Pending },
+                    new Leg { Odds = 1.40m, Result = LegResult.EarlyPayout },
+                    new Leg { Odds = 1.33m, Result = LegResult.Pending },
+                    new Leg { Odds = 1.46m, Result = LegResult.EarlyPayout },
+                    new Leg { Odds = 1.28m, Result = LegResult.Won }
                 }
             };
 

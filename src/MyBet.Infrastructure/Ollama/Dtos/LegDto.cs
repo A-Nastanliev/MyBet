@@ -8,6 +8,7 @@
         public string? Selection { get; set; }
         public decimal? Odds { get; set; }
         public string? Score { get; set; }
+        public List<string>? Badges { get; set; }
         public List<SubSelectionDto>? SubSelections { get; set; }
     }
 }
