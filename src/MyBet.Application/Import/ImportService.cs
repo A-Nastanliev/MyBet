@@ -8,13 +8,11 @@ namespace MyBet.Application.Import
         private static readonly string[] Extensions = { ".png", ".jpg", ".jpeg", ".webp" };
 
         private readonly ISlipExtractor _extractor;
-        private readonly IBadgeReader _badgeReader;
         private readonly ISlipRepository _repository;
 
-        public ImportService(ISlipExtractor extractor, IBadgeReader badgeReader, ISlipRepository repository)
+        public ImportService(ISlipExtractor extractor, ISlipRepository repository)
         {
             _extractor = extractor;
-            _badgeReader = badgeReader;
             _repository = repository;
         }
 
@@ -44,15 +42,6 @@ namespace MyBet.Application.Import
 
                 if (await _repository.ExistsAsync(slip.SlipId, ct))
                     return new ImportResult(file, ImportOutcome.Duplicate, slip.SlipId, Array.Empty<string>());
-
-                var results = _badgeReader.ReadLegResults(bytes, slip.Legs.Count);
-                for (var i = 0; i < slip.Legs.Count && i < results.Count; i++)
-                    slip.Legs[i].Result = results[i];
-
-                foreach (var leg in slip.Legs.Where(l => l.Result is null))
-                    leg.Result = LegResultEvaluator.Evaluate(leg);
-
-                slip.Status ??= LegResultEvaluator.ResolveStatus(slip.Legs);
 
                 var issues = SlipValidator.Validate(slip);
                 slip.NeedsReview = issues.Count > 0;
