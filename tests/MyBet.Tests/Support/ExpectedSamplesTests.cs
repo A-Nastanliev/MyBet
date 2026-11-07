@@ -9,11 +9,11 @@ namespace MyBet.Tests.Support
 
         [SampleTheory]
         [MemberData(nameof(Samples))]
-        public void Expected_file_obeys_the_odds_and_payout_rules(string sample)
+        public void Expected_status_follows_the_money_numbers(string sample)
         {
-            var issues = SlipValidator.Validate(SampleLoader.LoadExpected(sample).ToSlip());
+            var expected = SampleLoader.LoadExpected(sample);
 
-            Assert.True(issues.Count == 0, $"{sample}: {string.Join("; ", issues)}");
+            Assert.Equal(expected.Status, SlipStatusResolver.Resolve(expected.ToSlip()));
         }
 
         [SampleTheory]

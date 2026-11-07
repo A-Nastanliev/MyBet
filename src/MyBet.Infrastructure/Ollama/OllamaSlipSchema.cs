@@ -9,46 +9,12 @@ namespace MyBet.Infrastructure.Ollama
           "type": "object",
           "properties": {
             "slipId":       { "type": ["string", "null"] },
-            "placedAt":     { "type": ["string", "null"] },
-            "type":         { "type": ["string", "null"] },
             "stake":        { "type": ["number", "null"] },
             "totalOdds":    { "type": ["number", "null"] },
-            "payoutLabel":  { "type": ["string", "null"] },
             "payout":       { "type": ["number", "null"] },
-            "bonusPercent": { "type": ["number", "null"] },
-            "bonusAmount":  { "type": ["number", "null"] },
-            "legs": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "selection": { "type": ["string", "null"] },
-                  "odds":      { "type": ["number", "null"] },
-                  "market":    { "type": ["string", "null"] },
-                  "badges": {
-                    "type": "array",
-                    "items": { "type": "string", "enum": ["Печалба", "Загуба", "Изплатени", "Друго"] }
-                  },
-                  "homeTeam":  { "type": ["string", "null"] },
-                  "awayTeam":  { "type": ["string", "null"] },
-                  "score":     { "type": ["string", "null"] },
-                  "subSelections": {
-                    "type": "array",
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "selection": { "type": ["string", "null"] },
-                        "market":    { "type": ["string", "null"] }
-                      },
-                      "required": ["selection", "market"]
-                    }
-                  }
-                },
-                "required": ["selection", "odds", "market", "badges", "homeTeam", "awayTeam", "score", "subSelections"]
-              }
-            }
+            "bonusPercent": { "type": ["number", "null"] }
           },
-          "required": ["slipId", "placedAt", "type", "stake", "totalOdds", "payoutLabel", "payout", "bonusPercent", "bonusAmount", "legs"]
+          "required": ["slipId", "stake", "totalOdds", "payout", "bonusPercent"]
         }
         """).RootElement.Clone();
     }

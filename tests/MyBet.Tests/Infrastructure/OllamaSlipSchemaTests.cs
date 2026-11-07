@@ -5,17 +5,12 @@ namespace MyBet.Tests.Infrastructure
     public class OllamaSlipSchemaTests
     {
         [Fact]
-        public void Leg_properties_follow_the_order_of_the_screenshot()
+        public void Schema_asks_only_for_the_summary_fields()
         {
-            var leg = OllamaSlipSchema.Value
-                .GetProperty("properties").GetProperty("legs")
-                .GetProperty("items").GetProperty("properties");
+            var names = OllamaSlipSchema.Value
+                .GetProperty("properties").EnumerateObject().Select(p => p.Name).ToArray();
 
-            var names = leg.EnumerateObject().Select(p => p.Name).ToArray();
-
-            Assert.Equal(
-                new[] { "selection", "odds", "market", "badges", "homeTeam", "awayTeam", "score", "subSelections" },
-                names);
+            Assert.Equal(new[] { "slipId", "stake", "totalOdds", "payout", "bonusPercent" }, names);
         }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using MyBet.Application.Abstractions;
-using MyBet.Domain.Validation;
 
 namespace MyBet.Application.Import
 {
@@ -43,13 +42,16 @@ namespace MyBet.Application.Import
                 if (await _repository.ExistsAsync(slip.SlipId, ct))
                     return new ImportResult(file, ImportOutcome.Duplicate, slip.SlipId, Array.Empty<string>());
 
-                var issues = SlipValidator.Validate(slip);
-                slip.NeedsReview = issues.Count > 0;
-
                 await _repository.AddAsync(slip, ct);
 
-                var outcome = slip.NeedsReview ? ImportOutcome.NeedsReview : ImportOutcome.Imported;
-                return new ImportResult(file, outcome, slip.SlipId, issues);
+                if (!slip.NeedsReview)
+                    return new ImportResult(file, ImportOutcome.Imported, slip.SlipId, Array.Empty<string>());
+
+                var issues = new[]
+                {
+                    $"Status not determined (stake {slip.Stake}, odds {slip.TotalOdds}, payout {slip.Payout}, bonus {slip.BonusPercent}%)."
+                };
+                return new ImportResult(file, ImportOutcome.NeedsReview, slip.SlipId, issues);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {

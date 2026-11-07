@@ -48,20 +48,6 @@ namespace MyBet.Tests.Application
         }
 
         [Fact]
-        public async Task Slip_failing_validation_is_saved_as_needs_review()
-        {
-            _dir.AddFile("a.png");
-            _extractor.Enqueue(TestSlips.WithDroppedLeg("1002"));
-
-            var results = await _service.ImportDirectoryAsync(_dir.FullPath);
-
-            var result = Assert.Single(results);
-            Assert.Equal(ImportOutcome.NeedsReview, result.Outcome);
-            Assert.NotEmpty(result.Issues);
-            Assert.True(Assert.Single(_repository.Slips).NeedsReview);
-        }
-
-        [Fact]
         public async Task Null_extraction_is_reported_as_failed_and_not_saved()
         {
             _dir.AddFile("a.png");
@@ -103,52 +89,10 @@ namespace MyBet.Tests.Application
         }
 
         [Fact]
-        public async Task Results_and_status_from_the_extractor_are_saved_unchanged()
+        public async Task Cashed_out_slip_is_imported_without_review()
         {
             _dir.AddFile("a.png");
-            _extractor.Enqueue(TestSlips.LostWithPendingLegs("1006"));
-
-            await _service.ImportDirectoryAsync(_dir.FullPath);
-
-            var saved = Assert.Single(_repository.Slips);
-            Assert.Equal(SlipStatus.Lost, saved.Status);
-            Assert.Equal(
-                new LegResult?[] { LegResult.Lost, LegResult.Pending, LegResult.Pending },
-                saved.Legs.Select(l => l.Result).ToArray());
-        }
-
-        [Fact]
-        public async Task Won_slip_with_an_early_paid_leg_is_imported_without_review()
-        {
-            _dir.AddFile("a.png");
-            _extractor.Enqueue(TestSlips.WonWithEarlyPayout("1007"));
-
-            var results = await _service.ImportDirectoryAsync(_dir.FullPath);
-
-            Assert.Equal(ImportOutcome.Imported, Assert.Single(results).Outcome);
-            var saved = Assert.Single(_repository.Slips);
-            Assert.Equal(SlipStatus.Won, saved.Status);
-            Assert.Equal(LegResult.EarlyPayout, saved.Legs[1].Result);
-        }
-
-        [Fact]
-        public async Task Lost_slip_with_pending_legs_is_imported_without_review()
-        {
-            _dir.AddFile("a.png");
-            _extractor.Enqueue(TestSlips.LostWithPendingLegs("1008"));
-
-            var results = await _service.ImportDirectoryAsync(_dir.FullPath);
-
-            var result = Assert.Single(results);
-            Assert.Equal(ImportOutcome.Imported, result.Outcome);
-            Assert.Empty(result.Issues);
-        }
-
-        [Fact]
-        public async Task Cashed_out_slip_with_a_pending_leg_is_imported_without_review()
-        {
-            _dir.AddFile("a.png");
-            _extractor.Enqueue(TestSlips.CashedOutWithPendingLeg("1009"));
+            _extractor.Enqueue(TestSlips.CashedOut("1009"));
 
             var results = await _service.ImportDirectoryAsync(_dir.FullPath);
 
@@ -157,50 +101,31 @@ namespace MyBet.Tests.Application
         }
 
         [Fact]
-        public async Task Pending_leg_without_a_lost_leg_or_cash_out_is_sent_to_review()
+        public async Task Slip_with_undetermined_status_is_saved_as_needs_review()
         {
             _dir.AddFile("a.png");
-            _extractor.Enqueue(TestSlips.WonLegAndPendingLeg("1010"));
+            _extractor.Enqueue(TestSlips.Undetermined("1010"));
 
             var results = await _service.ImportDirectoryAsync(_dir.FullPath);
 
             var result = Assert.Single(results);
             Assert.Equal(ImportOutcome.NeedsReview, result.Outcome);
-            Assert.Contains(result.Issues, i => i.Contains("pending"));
-            var saved = Assert.Single(_repository.Slips);
-            Assert.Null(saved.Status);
-            Assert.True(saved.NeedsReview);
+            Assert.NotEmpty(result.Issues);
+            Assert.True(Assert.Single(_repository.Slips).NeedsReview);
         }
 
         [Fact]
-        public async Task Import_does_not_override_a_result_with_the_score()
-        {
-            var slip = TestSlips.DoubleWithAstonVillaOver("1011");
-            slip.Legs[0].Result = LegResult.Won;
-            slip.Legs[1].Result = LegResult.Won;
-            slip.Status = SlipStatus.Won;
-            _dir.AddFile("a.png");
-            _extractor.Enqueue(slip);
-
-            await _service.ImportDirectoryAsync(_dir.FullPath);
-
-            var saved = Assert.Single(_repository.Slips);
-            Assert.Equal(LegResult.Won, saved.Legs[1].Result);
-            Assert.Equal(SlipStatus.Won, saved.Status);
-        }
-
-        [Fact]
-        public async Task Import_does_not_guess_a_missing_result_from_the_score()
+        public async Task Lost_slip_is_imported_without_review()
         {
             _dir.AddFile("a.png");
-            _extractor.Enqueue(TestSlips.DoubleWithAstonVillaOver("1012"));
+            _extractor.Enqueue(TestSlips.Lost("1008"));
 
             var results = await _service.ImportDirectoryAsync(_dir.FullPath);
 
-            var saved = Assert.Single(_repository.Slips);
-            Assert.All(saved.Legs, l => Assert.Null(l.Result));
-            Assert.Null(saved.Status);
-            Assert.Equal(ImportOutcome.NeedsReview, Assert.Single(results).Outcome);
+            var result = Assert.Single(results);
+            Assert.Equal(ImportOutcome.Imported, result.Outcome);
+            Assert.Empty(result.Issues);
+            Assert.Equal(SlipStatus.Lost, Assert.Single(_repository.Slips).Status);
         }
     }
 }

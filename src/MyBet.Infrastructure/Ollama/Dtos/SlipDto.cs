@@ -1,16 +1,18 @@
-﻿namespace MyBet.Infrastructure.Ollama.Dtos
+﻿using System.Text.Json.Serialization;
+
+namespace MyBet.Infrastructure.Ollama.Dtos
 {
     public class SlipDto
     {
+        [JsonPropertyName("slipId")]
         public string? SlipId { get; set; }
-        public string? PlacedAt { get; set; }
-        public string? Type { get; set; }
+        [JsonPropertyName("stake")] 
         public decimal? Stake { get; set; }
+        [JsonPropertyName("totalOdds")] 
         public decimal? TotalOdds { get; set; }
-        public string? PayoutLabel { get; set; }
+        [JsonPropertyName("payout")] 
         public decimal? Payout { get; set; }
+        [JsonPropertyName("bonusPercent")] 
         public decimal? BonusPercent { get; set; }
-        public decimal? BonusAmount { get; set; }
-        public List<LegDto>? Legs { get; set; }
     }
 }

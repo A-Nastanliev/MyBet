@@ -53,6 +53,9 @@ namespace MyBet.Infrastructure.Ollama
             response.EnsureSuccessStatusCode();
 
             var envelope = await response.Content.ReadFromJsonAsync<OllamaChatResponse>(JsonOptions, ct);
+            if (envelope?.DoneReason == "length")
+                throw new InvalidOperationException("Model output was cut off. Increase NumCtx.");
+
             var content = envelope?.Message?.Content;
             if (string.IsNullOrWhiteSpace(content)) return null;
 

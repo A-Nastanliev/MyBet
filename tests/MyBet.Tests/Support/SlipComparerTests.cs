@@ -7,76 +7,45 @@ namespace MyBet.Tests.Support
     {
         private static ExpectedSlip Expected() => new()
         {
-            SlipId = "1001",
-            Type = "Двойни",
+            SlipId = "15636169921438697040",
             Stake = 1.00m,
-            TotalOdds = 2.92m,
-            Payout = 2.98m,
-            BonusPercent = 3,
-            BonusAmount = 0.06m,
-            Status = SlipStatus.Won,
-            Legs =
-            {
-                new ExpectedLeg
-                {
-                    HomeTeam = "Бодьо", AwayTeam = "Глимт", Market = "Краен Резултат",
-                    Selection = "1", Odds = 1.46m, Score = "4 : 3"
-                },
-                new ExpectedLeg
-                {
-                    HomeTeam = "Ювентус", AwayTeam = "Милан", Market = "Създай Залог",
-                    Selection = "Създай Залог", Odds = 2.00m, IsBetBuilder = true,
-                    SubSelections =
-                    {
-                        new ExpectedSubSelection { Market = "Голове", Selection = "Над 2.5" },
-                        new ExpectedSubSelection { Market = "Двата отбора вкарват", Selection = "Да" }
-                    }
-                }
-            }
+            TotalOdds = 2.58m,
+            Payout = 2.63m,
+            BonusPercent = 3m,
+            Status = SlipStatus.Won
         };
 
         private static Slip Actual() => new()
         {
-            SlipId = "1001",
-            Type = "Двойни",
+            SlipId = "15636169921438697040",
             Stake = 1.00m,
-            TotalOdds = 2.92m,
-            Payout = 2.98m,
-            BonusPercent = 3,
-            BonusAmount = 0.06m,
-            Legs =
-            {
-                new Leg
-                {
-                    HomeTeam = "Бодьо", AwayTeam = "Глимт", Market = "Краен Резултат",
-                    Selection = "1", Odds = 1.46m, Score = "4 : 3"
-                },
-                new Leg
-                {
-                    HomeTeam = "Ювентус", AwayTeam = "Милан", Market = "Създай Залог",
-                    Selection = "Създай Залог", Odds = 2.00m, IsBetBuilder = true,
-                    SubSelections =
-                    {
-                        new SubSelection { Market = "Голове", Selection = "Над 2.5" },
-                        new SubSelection { Market = "Двата отбора вкарват", Selection = "Да" }
-                    }
-                }
-            }
+            TotalOdds = 2.58m,
+            Payout = 2.63m,
+            BonusPercent = 3m,
+            Status = SlipStatus.Won
         };
 
         [Fact]
-        public void Matching_slip_has_no_differences()
-        {
+        public void Matching_slip_has_no_differences() =>
             Assert.Empty(SlipComparer.Compare(Expected(), Actual()));
+
+        [Fact]
+        public void Scale_of_a_decimal_does_not_matter()
+        {
+            var actual = Actual();
+            actual.Stake = 1m;
+            actual.Payout = 2.630m;
+
+            Assert.Empty(SlipComparer.Compare(Expected(), actual));
         }
 
         [Fact]
-        public void Wrong_leg_odds_are_reported()
+        public void Wrong_odds_are_reported()
         {
             var actual = Actual();
-            actual.Legs[0].Odds = 1.48m;
+            actual.TotalOdds = 2.85m;
 
-            Assert.Contains(SlipComparer.Compare(Expected(), actual), d => d.Contains("leg 1 odds"));
+            Assert.Contains(SlipComparer.Compare(Expected(), actual), d => d.StartsWith("totalOdds"));
         }
 
         [Fact]
@@ -93,57 +62,18 @@ namespace MyBet.Tests.Support
         public void Expected_null_must_be_null()
         {
             var expected = Expected();
-            expected.Stake = null;
+            expected.BonusPercent = null;
 
-            Assert.Contains(SlipComparer.Compare(expected, Actual()), d => d.StartsWith("stake"));
+            Assert.Contains(SlipComparer.Compare(expected, Actual()), d => d.StartsWith("bonusPercent"));
         }
 
         [Fact]
-        public void Misread_letter_in_a_team_name_is_tolerated()
-        {
-            var expected = Expected();
-            expected.Legs[0].HomeTeam = "Бодьо/Глимт";
-            var actual = Actual();
-            actual.Legs[0].HomeTeam = "Бодо/Глинт";
-
-            Assert.Empty(SlipComparer.Compare(expected, actual));
-        }
-
-        [Fact]
-        public void Unrelated_team_name_is_reported()
+        public void A_slip_number_with_a_wrong_digit_is_reported()
         {
             var actual = Actual();
-            actual.Legs[0].HomeTeam = "Реал Мадрид";
+            actual.SlipId = "15636169921438697041";
 
-            Assert.Contains(SlipComparer.Compare(Expected(), actual), d => d.Contains("leg 1 homeTeam"));
-        }
-
-        [Fact]
-        public void Spacing_inside_the_score_is_ignored()
-        {
-            var actual = Actual();
-            actual.Legs[0].Score = "4:3";
-
-            Assert.Empty(SlipComparer.Compare(Expected(), actual));
-        }
-
-        [Fact]
-        public void Dropped_leg_reports_the_count_and_skips_the_leg_comparison()
-        {
-            var actual = Actual();
-            actual.Legs.RemoveAt(1);
-
-            var diff = Assert.Single(SlipComparer.Compare(Expected(), actual));
-            Assert.StartsWith("legs: expected 2, got 1", diff);
-        }
-
-        [Fact]
-        public void Missing_sub_selection_is_reported()
-        {
-            var actual = Actual();
-            actual.Legs[1].SubSelections.RemoveAt(1);
-
-            Assert.Contains(SlipComparer.Compare(Expected(), actual), d => d.Contains("leg 2 subSelections"));
+            Assert.Contains(SlipComparer.Compare(Expected(), actual), d => d.StartsWith("slipId"));
         }
 
         [Fact]
@@ -152,7 +82,7 @@ namespace MyBet.Tests.Support
             var actual = Actual();
             actual.Stake = 5m;
             actual.Payout = 9m;
-            actual.Legs[0].Odds = 1.1m;
+            actual.TotalOdds = 1.1m;
 
             Assert.Equal(3, SlipComparer.Compare(Expected(), actual).Count);
         }

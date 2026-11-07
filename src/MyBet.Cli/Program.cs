@@ -1,11 +1,10 @@
 ﻿using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using MyBet.Application.Abstractions;
-using MyBet.Domain.Validation;
 using MyBet.Infrastructure;
-using System.Text.Json.Serialization;
 
 if (args.Length == 0)
 {
@@ -40,14 +39,6 @@ try
         return 1;
     }
 
-    foreach (var leg in slip.Legs.Where(l => l.Result is null))
-        leg.Result = LegResultEvaluator.Evaluate(leg);
-
-    slip.Status ??= LegResultEvaluator.ResolveStatus(slip.Legs);
-
-    var issues = SlipValidator.Validate(slip);
-    slip.NeedsReview = issues.Count > 0;
-
     var json = new JsonSerializerOptions
     {
         WriteIndented = true,
@@ -56,7 +47,7 @@ try
     };
     Console.WriteLine(JsonSerializer.Serialize(slip, json));
 
-    Console.WriteLine(issues.Count == 0 ? "VALID" : "NEEDS REVIEW:\n- " + string.Join("\n- ", issues));
+    Console.WriteLine(slip.NeedsReview ? "NEEDS REVIEW" : "OK");
     return 0;
 }
 catch (OperationCanceledException)
