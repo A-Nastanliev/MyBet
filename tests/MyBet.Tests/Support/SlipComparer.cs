@@ -1,10 +1,10 @@
-﻿using MyBet.Domain.Entities;
+using MyBet.Domain.Entities;
 
 namespace MyBet.Tests.Support
 {
     public static class SlipComparer
     {
-        public static IReadOnlyList<string> Compare(ExpectedSlip expected, Slip actual)
+        public static IReadOnlyList<string> Compare(ExpectedSlip expected, ExtractedSlip actual)
         {
             var diffs = new List<string>();
 

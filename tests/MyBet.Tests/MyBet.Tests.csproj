@@ -22,6 +22,7 @@
     <ProjectReference Include="..\..\src\MyBet.Domain\MyBet.Domain.csproj" />
     <ProjectReference Include="..\..\src\MyBet.Application\MyBet.Application.csproj" />
     <ProjectReference Include="..\..\src\MyBet.Infrastructure\MyBet.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\MyBet.Persistence\MyBet.Persistence.csproj" />
   </ItemGroup>
 
   <ItemGroup>

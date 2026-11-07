@@ -3,5 +3,6 @@
   <Project Path="src/MyBet.Cli/MyBet.Cli.csproj" />
   <Project Path="src/MyBet.Domain/MyBet.Domain.csproj" />
   <Project Path="src/MyBet.Infrastructure/MyBet.Infrastructure.csproj" />
+  <Project Path="src/MyBet.Persistence/MyBet.Persistence.csproj" />
   <Project Path="tests/MyBet.Tests/MyBet.Tests.csproj" />
 </Solution>

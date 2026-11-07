@@ -1,4 +1,4 @@
-﻿using System.Net.Http.Json;
+using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Options;
@@ -27,7 +27,7 @@ namespace MyBet.Infrastructure.Ollama
             _lifecycle = lifecycle;
         }
 
-        public async Task<Slip?> ExtractAsync(byte[] imageBytes, CancellationToken ct = default)
+        public async Task<ExtractedSlip?> ExtractAsync(byte[] imageBytes, CancellationToken ct = default)
         {
             await _lifecycle.EnsureStartedAsync(ct);
 

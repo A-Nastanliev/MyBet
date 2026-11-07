@@ -1,4 +1,4 @@
-﻿using MyBet.Domain.Entities;
+using MyBet.Domain.Entities;
 using MyBet.Domain.Enums;
 
 namespace MyBet.Domain.Validation
@@ -8,7 +8,7 @@ namespace MyBet.Domain.Validation
         private const decimal MoneyTolerance = 0.02m;
         private const decimal StakeTolerance = 0.005m;
 
-        public static SlipStatus? Resolve(Slip slip)
+        public static SlipStatus? Resolve(ExtractedSlip slip)
         {
             if (slip.Stake is not { } stake || slip.TotalOdds is not { } odds)
                 return null;

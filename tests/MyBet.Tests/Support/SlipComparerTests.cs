@@ -1,4 +1,4 @@
-﻿using MyBet.Domain.Entities;
+using MyBet.Domain.Entities;
 using MyBet.Domain.Enums;
 
 namespace MyBet.Tests.Support
@@ -15,7 +15,7 @@ namespace MyBet.Tests.Support
             Status = SlipStatus.Won
         };
 
-        private static Slip Actual() => new()
+        private static ExtractedSlip Actual() => new()
         {
             SlipId = "15636169921438697040",
             Stake = 1.00m,

@@ -1,11 +1,11 @@
-﻿using MyBet.Domain.Entities;
+using MyBet.Domain.Entities;
 using MyBet.Domain.Enums;
 
 namespace MyBet.Tests.Support
 {
     public static class TestSlips
     {
-        public static Slip ValidDouble(string slipId) => new()
+        public static ExtractedSlip ValidDouble(string slipId) => new()
         {
             SlipId = slipId,
             Stake = 1m,
@@ -15,7 +15,7 @@ namespace MyBet.Tests.Support
             Status = SlipStatus.Won
         };
 
-        public static Slip Lost(string slipId) => new()
+        public static ExtractedSlip Lost(string slipId) => new()
         {
             SlipId = slipId,
             Stake = 2m,
@@ -24,7 +24,7 @@ namespace MyBet.Tests.Support
             Status = SlipStatus.Lost
         };
 
-        public static Slip CashedOut(string slipId) => new()
+        public static ExtractedSlip CashedOut(string slipId) => new()
         {
             SlipId = slipId,
             Stake = 2m,
@@ -33,14 +33,33 @@ namespace MyBet.Tests.Support
             Status = SlipStatus.CashedOut
         };
 
-        public static Slip Undetermined(string slipId) => new()
+        public static ExtractedSlip Undetermined(string slipId) => new()
         {
             SlipId = slipId,
             Stake = 2m,
             TotalOdds = null,
             Payout = 4.10m,
-            Status = null,
-            NeedsReview = true
+            Status = null
+        };
+
+        public static ExtractedSlip NoReference() => new()
+        {
+            SlipId = "",
+            Stake = 1m,
+            TotalOdds = 2.58m,
+            Payout = 2.63m,
+            BonusPercent = 3m,
+            Status = SlipStatus.Won
+        };
+
+        public static Slip Saved(string slipId) => new()
+        {
+            SlipId = slipId,
+            Stake = 1m,
+            TotalOdds = 2.58m,
+            Payout = 2.63m,
+            BonusPercent = 3m,
+            Status = SlipStatus.Won
         };
     }
 }

@@ -1,4 +1,4 @@
-﻿using MyBet.Domain.Entities;
+using MyBet.Domain.Entities;
 using MyBet.Domain.Enums;
 using MyBet.Domain.Validation;
 
@@ -27,7 +27,7 @@ namespace MyBet.Tests.Domain
         public void Status_follows_the_money_numbers(
             decimal? stake, decimal? odds, decimal? bonus, decimal? payout, SlipStatus? expected)
         {
-            var slip = new Slip
+            var slip = new ExtractedSlip
             {
                 Stake = stake,
                 TotalOdds = odds,

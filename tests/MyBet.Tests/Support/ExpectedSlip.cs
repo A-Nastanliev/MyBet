@@ -1,4 +1,4 @@
-﻿using MyBet.Domain.Entities;
+using MyBet.Domain.Entities;
 using MyBet.Domain.Enums;
 
 namespace MyBet.Tests.Support
@@ -12,7 +12,7 @@ namespace MyBet.Tests.Support
         public decimal? BonusPercent { get; set; }
         public SlipStatus Status { get; set; }
 
-        public Slip ToSlip() => new()
+        public ExtractedSlip ToExtracted() => new()
         {
             SlipId = SlipId,
             Stake = Stake,

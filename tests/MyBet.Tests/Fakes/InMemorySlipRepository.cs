@@ -1,4 +1,4 @@
-﻿using MyBet.Application.Abstractions;
+using MyBet.Application.Abstractions;
 using MyBet.Domain.Entities;
 
 namespace MyBet.Tests.Fakes
@@ -12,11 +12,7 @@ namespace MyBet.Tests.Fakes
         public Task<bool> ExistsAsync(string slipId, CancellationToken ct = default) =>
             Task.FromResult(_slips.Any(s => s.SlipId == slipId));
 
-        public Task AddAsync(Slip slip, CancellationToken ct = default)
-        {
-            _slips.Add(slip);
-            return Task.CompletedTask;
-        }
+        public void Add(Slip slip) => _slips.Add(slip);
 
         public Task<IReadOnlyList<Slip>> GetAllAsync(CancellationToken ct = default) =>
             Task.FromResult<IReadOnlyList<Slip>>(_slips.ToList());

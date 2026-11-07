@@ -1,10 +1,11 @@
-﻿namespace MyBet.Application.Import
+namespace MyBet.Application.Import
 {
-    public enum ImportOutcome 
-    { 
-        Imported, 
-        NeedsReview, 
-        Duplicate, 
-        Failed 
+    public enum ImportOutcome
+    {
+        Imported,
+        NeedsReview,
+        Duplicate,
+        AlreadyScanned,
+        Failed
     }
 }

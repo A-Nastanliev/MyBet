@@ -1,4 +1,4 @@
-﻿using MyBet.Domain.Validation;
+using MyBet.Domain.Validation;
 using MyBet.Tests.Integration;
 
 namespace MyBet.Tests.Support
@@ -13,7 +13,7 @@ namespace MyBet.Tests.Support
         {
             var expected = SampleLoader.LoadExpected(sample);
 
-            Assert.Equal(expected.Status, SlipStatusResolver.Resolve(expected.ToSlip()));
+            Assert.Equal(expected.Status, SlipStatusResolver.Resolve(expected.ToExtracted()));
         }
 
         [SampleTheory]

@@ -1,4 +1,4 @@
-﻿namespace MyBet.Tests.Support
+namespace MyBet.Tests.Support
 {
     public sealed class TempDirectory : IDisposable
     {
@@ -10,7 +10,7 @@
         public string AddFile(string name, byte[]? content = null)
         {
             var path = Path.Combine(FullPath, name);
-            File.WriteAllBytes(path, content ?? new byte[] { 1, 2, 3 });
+            File.WriteAllBytes(path, content ?? Guid.NewGuid().ToByteArray());
             return path;
         }
 

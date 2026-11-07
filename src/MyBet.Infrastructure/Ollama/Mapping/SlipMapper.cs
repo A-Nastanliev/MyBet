@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using MyBet.Domain.Entities;
 using MyBet.Domain.Validation;
 using MyBet.Infrastructure.Ollama.Dtos;
@@ -10,9 +10,9 @@ namespace MyBet.Infrastructure.Ollama.Mapping
         private static readonly Regex IdLabel =
             new(@"^[\s№#:]*(?:ref\.?[\s#:]*)?", RegexOptions.IgnoreCase);
 
-        public static Slip ToDomain(SlipDto dto)
+        public static ExtractedSlip ToDomain(SlipDto dto)
         {
-            var slip = new Slip
+            var slip = new ExtractedSlip
             {
                 SlipId = CleanSlipId(dto.SlipId),
                 Stake = dto.Stake,
@@ -22,7 +22,6 @@ namespace MyBet.Infrastructure.Ollama.Mapping
             };
 
             slip.Status = SlipStatusResolver.Resolve(slip);
-            slip.NeedsReview = slip.Status is null || slip.SlipId.Length == 0;
             return slip;
         }
 
