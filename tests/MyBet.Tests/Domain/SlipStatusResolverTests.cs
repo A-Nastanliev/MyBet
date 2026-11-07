@@ -17,7 +17,9 @@ namespace MyBet.Tests.Domain
             { 2.00m, 5.00m, null, 4.10m, SlipStatus.CashedOut },
             { 2.00m, 5.00m, null, 12.00m, null },
             { null, 5.00m, null, 10.00m, null },
-            { 2.00m, null, null, 10.00m, null }
+            { 2.00m, null, null, 10.00m, null },
+            { null, null, null, null, null },
+            { null, 5.00m, null, 0.00m, null },
         };
 
         [Theory]

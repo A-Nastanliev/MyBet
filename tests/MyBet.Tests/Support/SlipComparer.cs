@@ -25,7 +25,7 @@ namespace MyBet.Tests.Support
 
         private static void ExactText(List<string> diffs, string field, string? expected, string? actual)
         {
-            if (!string.Equals(expected, actual, StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(expected, actual, StringComparison.Ordinal))
                 diffs.Add($"{field}: expected {Show(expected)}, got {Show(actual)}{NotExtracted(expected, actual)}");
         }
 
