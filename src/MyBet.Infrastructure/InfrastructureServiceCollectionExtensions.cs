@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MyBet.Application.Abstractions;
 using MyBet.Infrastructure.Ollama;
+using MyBet.Infrastructure.Settings;
 
 namespace MyBet.Infrastructure
 {
@@ -40,6 +41,13 @@ namespace MyBet.Infrastructure
 
             services.AddHttpClient<ISlipExtractor, OllamaSlipExtractor>(ConfigureClient);
 
+            return services;
+        }
+
+        public static IServiceCollection AddUserSettings(this IServiceCollection services, string dataDirectory)
+        {
+            services.AddSingleton<ISettingsStore>(
+                new JsonSettingsStore(Path.Combine(dataDirectory, "settings.json")));
             return services;
         }
     }

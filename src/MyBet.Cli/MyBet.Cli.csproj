@@ -2,11 +2,13 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.14" />
+	 <PackageReference Include="System.CommandLine" Version="2.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\MyBet.Application\MyBet.Application.csproj" />
     <ProjectReference Include="..\MyBet.Infrastructure\MyBet.Infrastructure.csproj" />
+	<ProjectReference Include="..\MyBet.Persistence\MyBet.Persistence.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

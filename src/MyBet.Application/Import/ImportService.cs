@@ -28,16 +28,22 @@ namespace MyBet.Application.Import
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<IReadOnlyList<ImportResult>> ImportDirectoryAsync(string directory, CancellationToken ct = default)
+        public async Task<IReadOnlyList<ImportResult>> ImportDirectoryAsync(
+            string directory, IProgress<ImportProgress>? progress = null, CancellationToken ct = default)
         {
             var results = new List<ImportResult>();
 
             var files = Directory.EnumerateFiles(directory)
                 .Where(f => Extensions.Contains(Path.GetExtension(f).ToLowerInvariant()))
-                .Order();
+                .Order()
+                .ToList();
 
-            foreach (var file in files)
-                results.Add(await ImportFileAsync(file, ct));
+            for (var i = 0; i < files.Count; i++)
+            {
+                var result = await ImportFileAsync(files[i], ct);
+                results.Add(result);
+                progress?.Report(new ImportProgress(i + 1, files.Count, result));
+            }
 
             return results;
         }
