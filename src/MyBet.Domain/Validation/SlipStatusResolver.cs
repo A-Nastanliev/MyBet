@@ -10,10 +10,11 @@ namespace MyBet.Domain.Validation
 
         public static SlipStatus? Resolve(ExtractedSlip slip)
         {
-            if (slip.Stake is not { } stake || slip.TotalOdds is not { } odds)
+            if (slip.Stake is not { } stake ||
+                slip.TotalOdds is not { } odds ||
+                slip.Payout is not { } payout)
                 return null;
 
-            var payout = slip.Payout ?? 0m;
             if (payout == 0m) return SlipStatus.Lost;
 
             var gross = stake * odds;

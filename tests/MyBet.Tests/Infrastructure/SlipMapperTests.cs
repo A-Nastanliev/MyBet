@@ -33,8 +33,20 @@ namespace MyBet.Tests.Infrastructure
         }
 
         [Fact]
-        public void Missing_payout_is_Lost() =>
-            Assert.Equal(SlipStatus.Lost, SlipMapper.ToDomain(Dto(payout: null)).Status);
+        public void Missing_payout_needs_review()
+        {
+            var slip = SlipMapper.ToDomain(Dto(payout: null));
+            Assert.Null(slip.Status);
+            Assert.True(slip.NeedsReview);
+        }
+
+        [Fact]
+        public void Zero_payout_is_Lost()
+        {
+            var slip = SlipMapper.ToDomain(Dto(payout: 0m));
+            Assert.Equal(SlipStatus.Lost, slip.Status);
+            Assert.False(slip.NeedsReview);
+        }
 
         [Fact]
         public void Undetermined_status_needs_review()

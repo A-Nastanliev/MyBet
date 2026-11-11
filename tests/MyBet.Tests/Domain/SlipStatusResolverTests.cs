@@ -13,7 +13,7 @@ namespace MyBet.Tests.Domain
             { 1.00m, 2.92m, 3m, 2.98m, SlipStatus.Won },
             { 1.00m, 2.58m, null, 2.58m, SlipStatus.Won },
             { 2.00m, 5.00m, null, 0.00m, SlipStatus.Lost },
-            { 2.00m, 5.00m, null, null, SlipStatus.Lost },
+            { 2.00m, 5.00m, null, null, null },
             { 2.00m, 5.00m, null, 4.10m, SlipStatus.CashedOut },
             { 2.00m, 5.00m, null, 12.00m, null },
             { null, 5.00m, null, 10.00m, null },

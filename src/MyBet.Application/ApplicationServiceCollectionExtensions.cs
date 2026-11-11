@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using MyBet.Application.HomeFolder;
 using MyBet.Application.Import;
+using MyBet.Application.Review;
 using MyBet.Application.Stats;
 using MyBet.Application.Update;
 
@@ -14,6 +15,7 @@ namespace MyBet.Application
             services.AddScoped<HomeFolderService>();
             services.AddScoped<UpdateService>();
             services.AddScoped<StatsService>();
+            services.AddScoped<ReviewService>();
             return services;
         }
     }

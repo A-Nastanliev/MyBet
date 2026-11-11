@@ -25,75 +25,118 @@ namespace MyBet.Tests.Persistence
             _db.Dispose();
         }
 
-        private static ReviewItem Item(string hash, ExtractedSlip? extracted = null) => new()
+        private static ReviewItem Item(string hash, string slipId = "1001") => new()
         {
             FileHash = hash,
-            FilePath = @"D:\Slips\" + hash + ".png",
-            Extracted = extracted ?? new ExtractedSlip { SlipId = "1010", Stake = 2m, Payout = 4.10m }
+            FilePath = $@"C:\Slips\{hash}.png",
+            Extracted = new ExtractedSlip
+            {
+                SlipId = slipId,
+                Stake = 2.31m,
+                TotalOdds = 14.16m,
+                Payout = null,
+                BonusPercent = 10m
+            }
         };
 
-        [Fact]
-        public async Task Item_is_stored_with_the_values_the_model_read()
+        private async Task<IReadOnlyList<ReviewItem>> ReadAllAsync()
         {
-            _repository.Add(Item("AAAA"));
+            using var other = _db.NewContext();
+            return await new ReviewQueueRepository(other).GetAllAsync();
+        }
+
+        [Fact]
+        public async Task Item_is_stored_only_when_changes_are_saved()
+        {
+            _repository.Add(Item("h1"));
+            Assert.Empty(await ReadAllAsync());
+
             await _unitOfWork.SaveChangesAsync();
+
+            Assert.Single(await ReadAllAsync());
+        }
+
+        [Fact]
+        public async Task All_fields_survive_a_round_trip_and_a_missing_payout_stays_null()
+        {
+            _repository.Add(Item("h1", "FbOAhzuOw148hoXv1eE8xQ=="));
+            await _unitOfWork.SaveChangesAsync();
+
+            var saved = Assert.Single(await ReadAllAsync());
+
+            Assert.True(saved.Id > 0);
+            Assert.Equal("h1", saved.FileHash);
+            Assert.Equal(@"C:\Slips\h1.png", saved.FilePath);
+            Assert.Equal("FbOAhzuOw148hoXv1eE8xQ==", saved.Extracted.SlipId);
+            Assert.Equal(2.31m, saved.Extracted.Stake);
+            Assert.Equal(14.16m, saved.Extracted.TotalOdds);
+            Assert.Null(saved.Extracted.Payout);
+            Assert.Equal(10m, saved.Extracted.BonusPercent);
+        }
+
+        [Fact]
+        public async Task Get_returns_the_item_by_id_and_null_for_a_missing_one()
+        {
+            _repository.Add(Item("h1"));
+            await _unitOfWork.SaveChangesAsync();
+            var id = Assert.Single(await ReadAllAsync()).Id;
 
             using var other = _db.NewContext();
-            var item = Assert.Single(await new ReviewQueueRepository(other).GetAllAsync());
+            var repository = new ReviewQueueRepository(other);
 
-            Assert.True(item.Id > 0);
-            Assert.Equal("AAAA", item.FileHash);
-            Assert.Equal(@"D:\Slips\AAAA.png", item.FilePath);
-            Assert.Equal("1010", item.Extracted.SlipId);
-            Assert.Equal(2m, item.Extracted.Stake);
-            Assert.Equal(4.10m, item.Extracted.Payout);
+            Assert.Equal("h1", (await repository.GetAsync(id))?.FileHash);
+            Assert.Null(await repository.GetAsync(id + 100));
         }
 
         [Fact]
-        public async Task Fields_the_model_could_not_read_stay_null()
+        public async Task Item_added_and_saved_can_be_removed_through_the_same_context()
         {
-            _repository.Add(Item("AAAA"));
+            _repository.Add(Item("h1"));
             await _unitOfWork.SaveChangesAsync();
+            var id = Assert.Single(await ReadAllAsync()).Id;
+
+            _repository.Remove(id);
+            await _unitOfWork.SaveChangesAsync();
+
+            Assert.Empty(await ReadAllAsync());
+        }
+
+        [Fact]
+        public async Task Item_can_be_removed_through_a_fresh_context()
+        {
+            _repository.Add(Item("h1"));
+            await _unitOfWork.SaveChangesAsync();
+            var id = Assert.Single(await ReadAllAsync()).Id;
 
             using var other = _db.NewContext();
-            var item = Assert.Single(await new ReviewQueueRepository(other).GetAllAsync());
+            new ReviewQueueRepository(other).Remove(id);
+            await new UnitOfWork(other).SaveChangesAsync();
 
-            Assert.Null(item.Extracted.TotalOdds);
-            Assert.Null(item.Extracted.BonusPercent);
-            Assert.Null(item.Extracted.Status);
-            Assert.True(item.Extracted.NeedsReview);
+            Assert.Empty(await ReadAllAsync());
         }
 
         [Fact]
-        public async Task Item_without_a_slip_reference_can_be_stored()
+        public async Task Remove_only_deletes_that_item()
         {
-            _repository.Add(Item("AAAA", new ExtractedSlip { SlipId = "", Stake = 1m, TotalOdds = 2m }));
+            _repository.Add(Item("h1", "1001"));
+            _repository.Add(Item("h2", "1002"));
+            await _unitOfWork.SaveChangesAsync();
+            var first = (await ReadAllAsync()).First(i => i.FileHash == "h1");
+
+            _repository.Remove(first.Id);
             await _unitOfWork.SaveChangesAsync();
 
-            using var other = _db.NewContext();
-            var item = Assert.Single(await new ReviewQueueRepository(other).GetAllAsync());
-
-            Assert.Equal("", item.Extracted.SlipId);
+            Assert.Equal("h2", Assert.Single(await ReadAllAsync()).FileHash);
+            Assert.Equal(1, await _repository.CountAsync());
         }
 
         [Fact]
-        public async Task Items_are_counted_and_listed_in_the_order_they_were_saved()
+        public async Task Same_file_hash_twice_is_rejected_by_the_database()
         {
-            _repository.Add(Item("BBBB"));
-            _repository.Add(Item("AAAA"));
+            _repository.Add(Item("h1"));
             await _unitOfWork.SaveChangesAsync();
 
-            Assert.Equal(2, await _repository.CountAsync());
-            Assert.Equal(new[] { "BBBB", "AAAA" }, (await _repository.GetAllAsync()).Select(i => i.FileHash));
-        }
-
-        [Fact]
-        public async Task Same_file_twice_is_rejected_by_the_database()
-        {
-            _repository.Add(Item("AAAA"));
-            await _unitOfWork.SaveChangesAsync();
-
-            _repository.Add(Item("AAAA"));
+            _repository.Add(Item("h1", "1002"));
 
             await Assert.ThrowsAnyAsync<DbUpdateException>(() => _unitOfWork.SaveChangesAsync());
         }

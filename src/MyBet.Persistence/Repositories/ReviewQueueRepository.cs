@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using MyBet.Application.Abstractions;
 using MyBet.Domain.Entities;
 using MyBet.Persistence.Mapping;
+using MyBet.Persistence.Models;
 
 namespace MyBet.Persistence.Repositories
 {
@@ -12,6 +13,18 @@ namespace MyBet.Persistence.Repositories
         public ReviewQueueRepository(MyBetDbContext db) => _db = db;
 
         public void Add(ReviewItem item) => _db.ReviewQueue.Add(item.ToRecord());
+
+        public async Task<ReviewItem?> GetAsync(int id, CancellationToken ct = default)
+        {
+            var record = await _db.ReviewQueue.AsNoTracking().FirstOrDefaultAsync(r => r.Id == id, ct);
+            return record?.ToDomain();
+        }
+
+        public void Remove(int id)
+        {
+            var tracked = _db.ReviewQueue.Local.FirstOrDefault(r => r.Id == id);
+            _db.ReviewQueue.Remove(tracked ?? new ReviewItemRecord { Id = id });
+        }
 
         public async Task<IReadOnlyList<ReviewItem>> GetAllAsync(CancellationToken ct = default)
         {

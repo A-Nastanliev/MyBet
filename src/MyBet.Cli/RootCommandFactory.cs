@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using MyBet.Application.Abstractions;
 using MyBet.Application.HomeFolder;
+using MyBet.Application.Review;
 using MyBet.Application.Stats;
 using MyBet.Application.Update;
 using MyBet.Cli.Commands;
@@ -54,10 +55,14 @@ namespace MyBet.Cli
                         parseResult.GetValue(folder), parseResult.GetValue(yes), ct);
 
                 if (parseResult.GetValue(update))
-                    return await UpdateCommand.RunAsync(sp.GetRequiredService<UpdateService>(), ct);
+                    return await UpdateCommand.RunAsync(
+                        sp.GetRequiredService<UpdateService>(),
+                        sp.GetRequiredService<ReviewService>(), ct);
 
                 if (parseResult.GetValue(add) is not null) return NotImplemented("-a");
-                if (parseResult.GetValue(review)) return NotImplemented("-x");
+
+                if (parseResult.GetValue(review))
+                    return await ReviewCommand.RunAsync(sp.GetRequiredService<ReviewService>(), ct);
 
                 var statuses = new List<SlipStatus>();
                 if (parseResult.GetValue(won)) statuses.Add(SlipStatus.Won);
