@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using MyBet.Application.Abstractions;
+using MyBet.Application.Copy;
 using MyBet.Application.HomeFolder;
 using MyBet.Application.Review;
 using MyBet.Application.Stats;
@@ -59,7 +60,8 @@ namespace MyBet.Cli
                         sp.GetRequiredService<UpdateService>(),
                         sp.GetRequiredService<ReviewService>(), ct);
 
-                if (parseResult.GetValue(add) is not null) return NotImplemented("-a");
+                if (parseResult.GetValue(add) is { } addPath)
+                    return await CopyCommand.RunAsync(sp.GetRequiredService<CopyService>(), addPath, ct);
 
                 if (parseResult.GetValue(review))
                     return await ReviewCommand.RunAsync(sp.GetRequiredService<ReviewService>(), ct);

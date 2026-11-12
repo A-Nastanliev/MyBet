@@ -6,8 +6,6 @@ namespace MyBet.Application.Import
 {
     public class ImportService
     {
-        private static readonly string[] Extensions = { ".png", ".jpg", ".jpeg", ".webp" };
-
         private readonly ISlipExtractor _extractor;
         private readonly ISlipRepository _slips;
         private readonly IScannedFileRepository _scannedFiles;
@@ -34,7 +32,7 @@ namespace MyBet.Application.Import
             var results = new List<ImportResult>();
 
             var files = Directory.EnumerateFiles(directory)
-                .Where(f => Extensions.Contains(Path.GetExtension(f).ToLowerInvariant()))
+                .Where(ImageExtensions.IsImage)
                 .Order()
                 .ToList();
 
