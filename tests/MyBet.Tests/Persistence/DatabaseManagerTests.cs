@@ -1,4 +1,5 @@
 using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using MyBet.Application.Abstractions;
 using MyBet.Persistence;
@@ -26,13 +27,19 @@ namespace MyBet.Tests.Persistence
             return services.BuildServiceProvider();
         }
 
+        private static async Task AddSlipAsync(IServiceProvider sp, string slipId)
+        {
+            sp.GetRequiredService<ISlipRepository>().Add(TestSlips.Saved(slipId));
+            await sp.GetRequiredService<IUnitOfWork>().SaveChangesAsync();
+        }
+
         [Fact]
         public async Task Database_file_is_created_with_its_tables()
         {
             using var provider = BuildProvider();
             using var scope = provider.CreateScope();
 
-            await scope.ServiceProvider.GetRequiredService<IDatabaseManager>().EnsureCreatedAsync();
+            await scope.ServiceProvider.GetRequiredService<IDatabaseManager>().MigrateAsync();
 
             Assert.True(File.Exists(_path));
             Assert.Empty(await scope.ServiceProvider.GetRequiredService<ISlipRepository>().GetAllAsync());
@@ -40,34 +47,94 @@ namespace MyBet.Tests.Persistence
         }
 
         [Fact]
-        public async Task Creating_twice_keeps_the_data()
+        public async Task Fresh_database_has_every_migration_applied_and_no_backup()
         {
             using var provider = BuildProvider();
+            using var scope = provider.CreateScope();
 
-            using (var scope = provider.CreateScope())
-            {
-                await scope.ServiceProvider.GetRequiredService<IDatabaseManager>().EnsureCreatedAsync();
-                scope.ServiceProvider.GetRequiredService<ISlipRepository>().Add(TestSlips.Saved("1001"));
-                await scope.ServiceProvider.GetRequiredService<IUnitOfWork>().SaveChangesAsync();
-            }
+            await scope.ServiceProvider.GetRequiredService<IDatabaseManager>().MigrateAsync();
 
-            using (var scope = provider.CreateScope())
-            {
-                await scope.ServiceProvider.GetRequiredService<IDatabaseManager>().EnsureCreatedAsync();
-                Assert.Single(await scope.ServiceProvider.GetRequiredService<ISlipRepository>().GetAllAsync());
-            }
+            var context = scope.ServiceProvider.GetRequiredService<MyBetDbContext>();
+            Assert.Empty(await context.Database.GetPendingMigrationsAsync());
+            Assert.NotEmpty(await context.Database.GetAppliedMigrationsAsync());
+            Assert.False(File.Exists(_path + ".bak"));
         }
 
         [Fact]
-        public async Task Reset_leaves_empty_tables()
+        public async Task Migrating_twice_keeps_the_data()
         {
             using var provider = BuildProvider();
 
             using (var scope = provider.CreateScope())
             {
-                await scope.ServiceProvider.GetRequiredService<IDatabaseManager>().EnsureCreatedAsync();
-                scope.ServiceProvider.GetRequiredService<ISlipRepository>().Add(TestSlips.Saved("1001"));
-                await scope.ServiceProvider.GetRequiredService<IUnitOfWork>().SaveChangesAsync();
+                await scope.ServiceProvider.GetRequiredService<IDatabaseManager>().MigrateAsync();
+                await AddSlipAsync(scope.ServiceProvider, "1001");
+            }
+
+            using (var scope = provider.CreateScope())
+            {
+                await scope.ServiceProvider.GetRequiredService<IDatabaseManager>().MigrateAsync();
+                Assert.Single(await scope.ServiceProvider.GetRequiredService<ISlipRepository>().GetAllAsync());
+            }
+
+            Assert.False(File.Exists(_path + ".bak"));
+        }
+
+        [Fact]
+        public async Task Database_made_with_EnsureCreated_is_adopted_with_its_data_and_backed_up()
+        {
+            using var provider = BuildProvider();
+
+            using (var scope = provider.CreateScope())
+            {
+                await scope.ServiceProvider.GetRequiredService<MyBetDbContext>().Database.EnsureCreatedAsync();
+                await AddSlipAsync(scope.ServiceProvider, "1001");
+            }
+
+            using (var scope = provider.CreateScope())
+            {
+                await scope.ServiceProvider.GetRequiredService<IDatabaseManager>().MigrateAsync();
+
+                Assert.Single(await scope.ServiceProvider.GetRequiredService<ISlipRepository>().GetAllAsync());
+
+                var context = scope.ServiceProvider.GetRequiredService<MyBetDbContext>();
+                Assert.Empty(await context.Database.GetPendingMigrationsAsync());
+                Assert.NotEmpty(await context.Database.GetAppliedMigrationsAsync());
+            }
+
+            Assert.True(File.Exists(_path + ".bak"));
+        }
+
+        [Fact]
+        public async Task Adopting_an_old_database_twice_is_harmless()
+        {
+            using var provider = BuildProvider();
+
+            using (var scope = provider.CreateScope())
+            {
+                await scope.ServiceProvider.GetRequiredService<MyBetDbContext>().Database.EnsureCreatedAsync();
+                await AddSlipAsync(scope.ServiceProvider, "1001");
+            }
+
+            for (var i = 0; i < 2; i++)
+            {
+                using var scope = provider.CreateScope();
+                await scope.ServiceProvider.GetRequiredService<IDatabaseManager>().MigrateAsync();
+            }
+
+            using (var scope = provider.CreateScope())
+                Assert.Single(await scope.ServiceProvider.GetRequiredService<ISlipRepository>().GetAllAsync());
+        }
+
+        [Fact]
+        public async Task Reset_leaves_empty_up_to_date_tables()
+        {
+            using var provider = BuildProvider();
+
+            using (var scope = provider.CreateScope())
+            {
+                await scope.ServiceProvider.GetRequiredService<IDatabaseManager>().MigrateAsync();
+                await AddSlipAsync(scope.ServiceProvider, "1001");
                 await scope.ServiceProvider.GetRequiredService<IDatabaseManager>().ResetAsync();
             }
 
@@ -75,6 +142,8 @@ namespace MyBet.Tests.Persistence
             {
                 Assert.Empty(await scope.ServiceProvider.GetRequiredService<ISlipRepository>().GetAllAsync());
                 Assert.False(await scope.ServiceProvider.GetRequiredService<ISlipRepository>().ExistsAsync("1001"));
+                Assert.Empty(await scope.ServiceProvider.GetRequiredService<MyBetDbContext>()
+                    .Database.GetPendingMigrationsAsync());
             }
         }
     }

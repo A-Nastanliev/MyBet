@@ -6,7 +6,7 @@ namespace MyBet.Tests.Fakes
     {
         public int ResetCount { get; private set; }
 
-        public Task EnsureCreatedAsync(CancellationToken ct = default) => Task.CompletedTask;
+        public Task MigrateAsync(CancellationToken ct = default) => Task.CompletedTask;
 
         public Task ResetAsync(CancellationToken ct = default)
         {

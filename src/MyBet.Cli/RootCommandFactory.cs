@@ -48,7 +48,7 @@ namespace MyBet.Cli
             {
                 await using var scope = services.CreateAsyncScope();
                 var sp = scope.ServiceProvider;
-                await sp.GetRequiredService<IDatabaseManager>().EnsureCreatedAsync(ct);
+                await sp.GetRequiredService<IDatabaseManager>().MigrateAsync(ct);
 
                 if (parseResult.GetResult(folder) is not null)
                     return await HomeFolderCommand.RunAsync(
@@ -81,12 +81,6 @@ namespace MyBet.Cli
             });
 
             return root;
-        }
-
-        private static int NotImplemented(string what)
-        {
-            Console.WriteLine($"{what} is not implemented yet.");
-            return 1;
         }
     }
 }

@@ -14,7 +14,7 @@ namespace MyBet.Tests.Persistence
             _connection.Open();
 
             using var context = NewContext();
-            context.Database.EnsureCreated();
+            context.Database.Migrate();
         }
 
         public MyBetDbContext NewContext() =>
